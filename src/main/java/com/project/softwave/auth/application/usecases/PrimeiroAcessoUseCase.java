@@ -12,8 +12,12 @@ import java.util.Optional;
 @Service
 public class PrimeiroAcessoUseCase {
 
+    private final UsuarioRepository usuarioRepository;
+
     @Autowired
-    private UsuarioRepository usuarioRepository;
+    public PrimeiroAcessoUseCase(UsuarioRepository usuarioRepository) {
+        this.usuarioRepository = usuarioRepository;
+    }
 
     public UsuarioLoginDto primeiroAcesso(UsuarioPrimeiroAcessoDTO usuario) {
         if (usuario.getEmail() == null || usuario.getTokenPrimeiroAcesso() == null) {
