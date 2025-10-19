@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  # Banco de dados MySQL
+  mysql:
+    image: mysql:8.0
+    container_name: softwave-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: 09241724
+      MYSQL_DATABASE: softwave
+      MYSQL_USER: softwave_user
+      MYSQL_PASSWORD: softwave_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - softwave-network
+    restart: unless-stopped
+
+  # Aplicação Spring Boot
+  auth-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: softwave-auth-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/softwave?createDatabaseIfNotExist=true&useTimezone=true&serverTimezone=UTC
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=09241724
+      - MAIL_USERNAME=${MAIL_USERNAME:-eumesmoagente007@gmail.com}
+      - MAIL_PASSWORD=${MAIL_PASSWORD:-mrzj zxql ogzo opok}
+    ports:
+      - "8081:8081"
+    depends_on:
+      - mysql
+    networks:
+      - softwave-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  softwave-network:
+    driver: bridge
