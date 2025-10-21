@@ -3,6 +3,8 @@ package com.project.softwave.auth.application.usecases;
 import com.project.softwave.auth.domain.entities.Usuario;
 import com.project.softwave.auth.domain.ports.EmailService;
 import com.project.softwave.auth.domain.ports.UsuarioRepository;
+import com.project.softwave.auth.infrastructure.exceptions.EntidadeNaoEncontradaException;
+import com.project.softwave.auth.infrastructure.exceptions.ForbiddenException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,8 +25,10 @@ public class SolicitarResetSenhaUseCase {
     @Transactional
     public void solicitarResetSenha(String email) {
         Usuario usuario = usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado!"));
-
+                .orElseThrow(() -> new EntidadeNaoEncontradaException("Usuário não encontrado!"));
+        if(!usuario.getAtivo()){
+            throw new ForbiddenException("Usuário inativo!, realize o primeiro acesso ou verifique com o administrador.");
+        }
         String token = UUID.randomUUID().toString().replace("-", "").substring(0, 8);
         usuario.setTokenRecuperacaoSenha(token);
         usuario.setDataCriacaoTokenRecuperacaoSenha(LocalDateTime.now());

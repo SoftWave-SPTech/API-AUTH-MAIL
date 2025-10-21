@@ -4,6 +4,8 @@ import com.project.softwave.auth.application.dto.UsuarioLoginDto;
 import com.project.softwave.auth.application.dto.UsuarioPrimeiroAcessoDTO;
 import com.project.softwave.auth.domain.entities.Usuario;
 import com.project.softwave.auth.domain.ports.UsuarioRepository;
+import com.project.softwave.auth.infrastructure.exceptions.ForbiddenException;
+import com.project.softwave.auth.infrastructure.exceptions.LoginIncorretoException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,15 +23,17 @@ public class PrimeiroAcessoUseCase {
 
     public UsuarioLoginDto primeiroAcesso(UsuarioPrimeiroAcessoDTO usuario) {
         if (usuario.getEmail() == null || usuario.getTokenPrimeiroAcesso() == null) {
-            throw new RuntimeException("Email e chave de acesso não podem ser nulos");
+            throw new LoginIncorretoException("Email e chave de acesso não podem ser nulos");
         }
 
         Optional<Usuario> possivelUsuario =
                 usuarioRepository.findByEmailEqualsAndTokenPrimeiroAcessoEquals(
                         usuario.getEmail(), usuario.getTokenPrimeiroAcesso());
-        
+
         if (possivelUsuario.isEmpty()) {
-            throw new RuntimeException("Email ou chave de acesso inválido");
+            throw new LoginIncorretoException("Email ou chave de acesso inválido");
+        }else {
+            possivelUsuario.get().setTentativasFalhasLogin(0);
         }
         
         UsuarioLoginDto primeiroAcesso = new UsuarioLoginDto(
@@ -38,7 +42,7 @@ public class PrimeiroAcessoUseCase {
 
         Boolean usuarioAtivo = usuarioRepository.existsByEmailAndAtivoIsTrue(usuario.getEmail());
         if (usuarioAtivo) {
-            throw new RuntimeException("Usuário Já Ativo!");
+            throw new ForbiddenException("Usuário Já Ativo!");
         }
 
         return primeiroAcesso;

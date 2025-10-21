@@ -3,6 +3,8 @@ package com.project.softwave.auth.application.usecases;
 import com.project.softwave.auth.domain.entities.Usuario;
 import com.project.softwave.auth.domain.ports.EmailService;
 import com.project.softwave.auth.domain.ports.UsuarioRepository;
+import com.project.softwave.auth.infrastructure.exceptions.EntidadeNaoEncontradaException;
+import com.project.softwave.auth.infrastructure.exceptions.ForbiddenException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -19,10 +21,10 @@ public class ReenviarTokenPrimeiroAcessoUseCase {
 
     public void execute(String email) {
         Usuario usuario = usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new EntidadeNaoEncontradaException("Usuário não encontrado"));
 
         if (usuario.getAtivo()) {
-            throw new RuntimeException("Usuário já está ativo");
+            throw new ForbiddenException("Usuário já está ativo");
         }
 
         String novoToken = java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 8);

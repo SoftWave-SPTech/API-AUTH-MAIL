@@ -34,6 +34,8 @@ public class Usuario {
     private String foto;
     private Boolean ativo;
 
+    private Integer tentativasFalhasLogin;
+
     // Tokens de autenticação
     private String tokenRecuperacaoSenha;
     private String tokenPrimeiroAcesso;
@@ -133,6 +135,14 @@ public class Usuario {
 
     public void setTokenRecuperacaoSenha(String tokenRecuperacaoSenha) {
         this.tokenRecuperacaoSenha = tokenRecuperacaoSenha;
+    }
+
+    public Integer getTentativasFalhasLogin() {
+        return tentativasFalhasLogin;
+    }
+
+    public void setTentativasFalhasLogin(Integer tentativasFalhasLogin) {
+        this.tentativasFalhasLogin = tentativasFalhasLogin;
     }
 
     public String getTokenPrimeiroAcesso() {
