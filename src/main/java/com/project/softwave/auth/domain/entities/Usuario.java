@@ -6,6 +6,8 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "usuario")
@@ -27,22 +29,35 @@ public class Usuario {
     @Column(unique = true, nullable = false)
     private String email;
 
-    @Enumerated(EnumType.ORDINAL)
+    //    @Enumerated(EnumType.STRING)
     private Role role;
 
+    private String cep;
+
+    private String logradouro;
+
+    private String bairro;
+
+    private String cidade;
+
+    private String complemento;
+
+    private String numero;
+
     private String telefone;
+
     private String foto;
+
     private Boolean ativo;
 
     private Integer tentativasFalhasLogin;
 
-    // Tokens de autenticação
     private String tokenRecuperacaoSenha;
     private String tokenPrimeiroAcesso;
 
-    // Datas dos tokens
     private LocalDateTime dataCriacaoTokenRecuperacaoSenha;
     private LocalDateTime dataCriacaoTokenPrimeiroAcesso;
+
     private LocalDateTime dataExpiracaoTokenRecuperacaoSenha;
     private LocalDateTime dataExpiracaoTokenPrimeiroAcesso;
 
@@ -54,55 +69,86 @@ public class Usuario {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // Construtores
-    public Usuario() {}
-
-    public Usuario(String email, String senha, Role role) {
-        this.email = email;
-        this.senha = senha;
-        this.role = role;
-        this.ativo = false;
+    public Usuario() {
     }
 
-    // Getters e Setters
-    public Integer getId() {
-        return id;
+    public Usuario(Integer id, String senha, String email, String cep, String logradouro, String bairro, String cidade, String complemento, String telefone) {
+        this.id = id;
+        this.senha = senha;
+        this.email = email;
+        this.cep = cep;
+        this.logradouro = logradouro;
+        this.bairro = bairro;
+        this.cidade = cidade;
+        this.complemento = complemento;
+        this.telefone = telefone;
+    }
+
+    public Usuario(String senha, String email, String cep, String logradouro, String bairro, String cidade, String complemento, String telefone) {
+        this.senha = senha;
+        this.email = email;
+        this.cep = cep;
+        this.logradouro = logradouro;
+        this.bairro = bairro;
+        this.cidade = cidade;
+        this.complemento = complemento;
+        this.telefone = telefone;
     }
 
     public void setId(Integer id) {
         this.id = id;
     }
 
-    public String getTipoUsuario() {
-        return tipoUsuario;
-    }
-
-    public void setTipoUsuario(String tipoUsuario) {
-        this.tipoUsuario = tipoUsuario;
-    }
-
-    public String getSenha() {
-        return senha;
-    }
-
     public void setSenha(String senha) {
         this.senha = senha;
-    }
-
-    public String getEmail() {
-        return email;
     }
 
     public void setEmail(String email) {
         this.email = email;
     }
 
-    public Role getRole() {
-        return role;
+    public Integer getId() {
+        return id;
     }
 
-    public void setRole(Role role) {
-        this.role = role;
+    public String getSenha() {
+        return senha;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getCep() {
+        return cep;
+    }
+
+    public void setCep(String cep) {
+        this.cep = cep;
+    }
+
+    public String getLogradouro() {
+        return logradouro;
+    }
+
+    public void setLogradouro(String logradouro) {
+        this.logradouro = logradouro;
+    }
+
+    public String getBairro() {
+        return bairro;
+    }
+
+    public void setBairro(String bairro) {
+        this.bairro = bairro;
+    }
+
+    public String getCidade() {
+        return cidade;
+    }
+
+    public void setCidade(String cidade) {
+        this.cidade = cidade;
     }
 
     public String getTelefone() {
@@ -113,12 +159,40 @@ public class Usuario {
         this.telefone = telefone;
     }
 
-    public String getFoto() {
-        return foto;
+    public String getFoto() {return foto; }
+
+    public void setFoto(String foto) {this.foto = foto; }
+
+    public String getComplemento() {
+        return complemento;
     }
 
-    public void setFoto(String foto) {
-        this.foto = foto;
+    public void setComplemento(String complemento) {
+        this.complemento = complemento;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
+    }
+
+    public String getNumero() {
+        return numero;
+    }
+
+    public void setNumero(String numero) {
+        this.numero = numero;
+    }
+
+    public String getTipoUsuario() {
+        return tipoUsuario;
+    }
+
+    public void setTipoUsuario(String tipoUsuario) {
+        this.tipoUsuario = tipoUsuario;
     }
 
     public Boolean getAtivo() {
@@ -135,14 +209,6 @@ public class Usuario {
 
     public void setTokenRecuperacaoSenha(String tokenRecuperacaoSenha) {
         this.tokenRecuperacaoSenha = tokenRecuperacaoSenha;
-    }
-
-    public Integer getTentativasFalhasLogin() {
-        return tentativasFalhasLogin;
-    }
-
-    public void setTentativasFalhasLogin(Integer tentativasFalhasLogin) {
-        this.tentativasFalhasLogin = tentativasFalhasLogin;
     }
 
     public String getTokenPrimeiroAcesso() {
@@ -199,5 +265,13 @@ public class Usuario {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public Integer getTentativasFalhasLogin() {
+        return tentativasFalhasLogin;
+    }
+
+    public void setTentativasFalhasLogin(Integer tentativasFalhasLogin) {
+        this.tentativasFalhasLogin = tentativasFalhasLogin;
     }
 }

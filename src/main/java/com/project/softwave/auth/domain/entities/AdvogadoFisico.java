@@ -1,57 +1,43 @@
 package com.project.softwave.auth.domain.entities;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 
 @Entity
 @DiscriminatorValue("AdvogadoFisico")
-public class AdvogadoFisico extends Usuario {
-    
-    private String nome;
-    private String cpf;
-    private String rg;
-    private String oab;
+public class AdvogadoFisico extends UsuarioFisico {
 
-    public AdvogadoFisico() {
-        super();
-    }
+        @Column(unique = true)
+        private Integer oab;
 
-    public AdvogadoFisico(String email, String senha, Role role, String nome, String cpf, String oab) {
-        super(email, senha, role);
-        this.nome = nome;
-        this.cpf = cpf;
-        this.oab = oab;
-    }
+        public AdvogadoFisico() {
+        }
 
-    public String getNome() {
-        return nome;
-    }
+        public AdvogadoFisico(Integer oab) {
+            this.oab = oab;
+        }
 
-    public void setNome(String nome) {
-        this.nome = nome;
-    }
+        public AdvogadoFisico(String nome, String cpf, String rg, Integer oab) {
+            super(nome, cpf, rg);
+            this.oab = oab;
+        }
 
-    public String getCpf() {
-        return cpf;
-    }
+        public AdvogadoFisico(Integer id, String senha, String email, String cep, String logradouro, String bairro, String cidade, String complemento, String telefone, String nome, String cpf, String rg, Integer oab) {
+            super(id, senha, email, cep, logradouro, bairro, cidade, complemento, telefone, nome, cpf, rg);
+            this.oab = oab;
+        }
 
-    public void setCpf(String cpf) {
-        this.cpf = cpf;
-    }
+        public AdvogadoFisico(String senha, String email, String cep, String logradouro, String bairro, String cidade, String complemento, String telefone, String nome, String cpf, String rg, Integer oab) {
+            super(senha, email, cep, logradouro, bairro, cidade, complemento, telefone, nome, cpf, rg);
+            this.oab = oab;
+        }
 
-    public String getRg() {
-        return rg;
-    }
+        public Integer getOab() {
+            return oab;
+        }
 
-    public void setRg(String rg) {
-        this.rg = rg;
+        public void setOab(Integer oab) {
+            this.oab = oab;
+        }
     }
-
-    public String getOab() {
-        return oab;
-    }
-
-    public void setOab(String oab) {
-        this.oab = oab;
-    }
-}

@@ -1,48 +1,43 @@
 package com.project.softwave.auth.domain.entities;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 
 @Entity
 @DiscriminatorValue("AdvogadoJuridico")
-public class AdvogadoJuridico extends Usuario {
-    
-    private String nomeFantasia;
-    private String cnpj;
-    private String oab;
+public class AdvogadoJuridico extends UsuarioJuridico {
 
-    public AdvogadoJuridico() {
-        super();
-    }
+        @Column(unique = true)
+        private Integer oab;
 
-    public AdvogadoJuridico(String email, String senha, Role role, String nomeFantasia, String cnpj, String oab) {
-        super(email, senha, role);
-        this.nomeFantasia = nomeFantasia;
-        this.cnpj = cnpj;
-        this.oab = oab;
-    }
+        public AdvogadoJuridico() {
+        }
 
-    public String getNomeFantasia() {
-        return nomeFantasia;
-    }
+        public AdvogadoJuridico(String cnpj, String nomeFantasia, String razaoSocial, String representante, Integer oab) {
+            super(cnpj, nomeFantasia, razaoSocial, representante);
+            this.oab = oab;
+        }
 
-    public void setNomeFantasia(String nomeFantasia) {
-        this.nomeFantasia = nomeFantasia;
-    }
+        public AdvogadoJuridico(Integer id, String senha, String email, String cep, String logradouro, String bairro, String cidade, String complemento, String telefone, String cnpj, String nomeFantasia, String razaoSocial, String representante, Integer oab) {
+            super(id, senha, email, cep, logradouro, bairro, cidade, complemento, telefone, cnpj, nomeFantasia, razaoSocial, representante);
+            this.oab = oab;
+        }
 
-    public String getCnpj() {
-        return cnpj;
-    }
+        public AdvogadoJuridico(String senha, String email, String cep, String logradouro, String bairro, String cidade, String complemento, String telefone, String cnpj, String nomeFantasia, String razaoSocial, String representante, Integer oab) {
+            super(senha, email, cep, logradouro, bairro, cidade, complemento, telefone, cnpj, nomeFantasia, razaoSocial, representante);
+            this.oab = oab;
+        }
 
-    public void setCnpj(String cnpj) {
-        this.cnpj = cnpj;
-    }
+        public AdvogadoJuridico(Integer oab) {
+            this.oab = oab;
+        }
 
-    public String getOab() {
-        return oab;
-    }
+        public Integer getOab() {
+            return oab;
+        }
 
-    public void setOab(String oab) {
-        this.oab = oab;
+        public void setOab(Integer oab) {
+            this.oab = oab;
+        }
     }
-}
