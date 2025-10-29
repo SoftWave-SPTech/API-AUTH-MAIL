@@ -11,6 +11,7 @@ import com.project.softwave.auth.infrastructure.exceptions.LoginIncorretoExcepti
 import com.project.softwave.auth.infrastructure.exceptions.TooManyRequestsException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -56,9 +57,15 @@ public class LoginUseCase {
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
             String tipoUsuario = usuarioAutenticado.getClass().getSimpleName();
-            String nome = usuarioAutenticado instanceof UsuarioFisico
-                    ? ((UsuarioFisico) usuarioAutenticado).getNome()
-                    : ((UsuarioJuridico) usuarioAutenticado).getNomeFantasia();
+            String nome;
+            
+            if (usuarioAutenticado instanceof UsuarioFisico) {
+                nome = ((UsuarioFisico) usuarioAutenticado).getNome();
+            } else if (usuarioAutenticado instanceof UsuarioJuridico) {
+                nome = ((UsuarioJuridico) usuarioAutenticado).getNomeFantasia();
+            } else {
+                nome = usuarioAutenticado.getEmail(); // Fallback para email
+            }
 
             final String token = tokenService.generateToken(authentication, tipoUsuario, nome, usuarioAutenticado.getId());
             String role = authentication.getAuthorities().stream()
@@ -69,15 +76,19 @@ public class LoginUseCase {
             return UsuarioTokenDTO.toDTO(usuarioAutenticado, token, role, nome, usuarioAutenticado.getFoto());
 
         } catch (Exception e) {
-            if(e.equals(AuthenticationException.class)){
+            if(e.getClass().equals(AuthenticationException.class) || e.getClass().equals(BadCredentialsException.class)) {
                 Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(usuarioLoginDto.getEmail());
                 if (usuarioOpt.isPresent()) {
                     Usuario usuario = usuarioOpt.get();
                     usuario.setTentativasFalhasLogin(usuario.getTentativasFalhasLogin() + 1);
                     usuarioRepository.save(usuario);
                 }
+                System.out.println("Deu erro dentro do if:" + e);
+                System.out.println("Tipo do erro dentro do if:" + e.getClass());
                 throw new LoginIncorretoException("Email ou senha inválidos!");
             }
+            System.out.println("Deu erro" + e);
+            System.out.println("Tipo do erro" + e.getClass());
             throw e;
         }
     }

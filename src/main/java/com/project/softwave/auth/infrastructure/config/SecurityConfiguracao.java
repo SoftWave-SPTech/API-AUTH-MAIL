@@ -40,6 +40,9 @@ public class SecurityConfiguracao {
     @Autowired
     private GerenciadorTokenJwt gerenciadorTokenJwt;
 
+    @Autowired
+    private AutenticacaoEntryPoint autenticacaoEntryPoint;
+
     private static final AntPathRequestMatcher[] URLS_PERMITIDAS = {
             new AntPathRequestMatcher("/swagger-ui/**"),
             new AntPathRequestMatcher("/swagger-ui.html"),
@@ -64,6 +67,8 @@ public class SecurityConfiguracao {
                         .requestMatchers(URLS_PERMITIDAS).permitAll()
                         .anyRequest().authenticated()
                 )
+                .exceptionHandling(handling -> handling
+                        .authenticationEntryPoint(autenticacaoEntryPoint))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         http.addFilterBefore(jwtAuthenticationFilterBean(), UsernamePasswordAuthenticationFilter.class);
@@ -74,7 +79,7 @@ public class SecurityConfiguracao {
     @Bean
     public AuthenticationManager authenticationManager(HttpSecurity http, PasswordEncoder passwordEncoder) throws Exception {
         AuthenticationManagerBuilder authenticationManagerBuilder = http.getSharedObject(AuthenticationManagerBuilder.class);
-        authenticationManagerBuilder.userDetailsService(autenticacaoService).passwordEncoder(passwordEncoder);
+        authenticationManagerBuilder.authenticationProvider(new AutenticacaoProvider(autenticacaoService, passwordEncoder));
         return authenticationManagerBuilder.build();
     }
 
