@@ -1,318 +1,446 @@
-# 🔐 API-AUTH-MAIL
+# API Auth-Mail - Microserviço de Autenticação
 
-Microserviço de Autenticação e Autorização desenvolvido com Spring Boot, implementando Clean Architecture e responsável pelo gerenciamento de usuários, autenticação JWT e envio de emails.
+Microserviço especializado em autenticação, autorização e envio de emails do sistema SoftWave, desenvolvido com Spring Boot e Spring Security.
 
-## 📋 Índice
+## Tecnologias Utilizadas
 
-- [Sobre o Projeto](#sobre-o-projeto)
-- [Tecnologias Utilizadas](#tecnologias-utilizadas)
-- [Arquitetura](#arquitetura)
-- [Pré-requisitos](#pré-requisitos)
-- [Instalação e Configuração](#instalação-e-configuração)
-- [Uso](#uso)
-- [Endpoints da API](#endpoints-da-api)
-- [Configuração de Email](#configuração-de-email)
-- [Testes](#testes)
-- [Documentação da API](#documentação-da-api)
-- [Contribuição](#contribuição)
+![Spring Boot](https://img.shields.io/badge/spring-%236DB33F.svg?style=for-the-badge&logo=spring&logoColor=white)
+![Spring Security](https://img.shields.io/badge/Spring_Security-6DB33F?style=for-the-badge&logo=Spring-Security&logoColor=white)
+![Java](https://img.shields.io/badge/java-%23ED8B00.svg?style=for-the-badge&logo=openjdk&logoColor=white)
+![MySQL](https://img.shields.io/badge/mysql-%2300f.svg?style=for-the-badge&logo=mysql&logoColor=white)
+![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
 
-## 🎯 Sobre o Projeto
+### Dependências Principais
 
-Este microserviço é responsável por:
-
-- **Autenticação e Autorização**: Login seguro com JWT
-- **Gerenciamento de Usuários**: Cadastro e gestão de diferentes tipos de usuários
-- **Primeiro Acesso**: Fluxo completo para novos usuários
-- **Reset de Senha**: Recuperação de senha via email
-- **Envio de Emails**: Notificações e comunicações automáticas
-- **Segurança**: Implementação de Spring Security com JWT
-
-## 🚀 Tecnologias Utilizadas
-
-### Core
-- **Java 21** - Linguagem de programação
 - **Spring Boot 3.1.5** - Framework principal
-- **Maven** - Gerenciamento de dependências
+- **Spring Security** - Autenticação e autorização
+- **Spring Data JPA** - Persistência de dados
+- **Spring Boot Mail** - Envio de emails
+- **MySQL Connector J** - Driver do banco de dados
+- **JWT (jjwt) 0.11.5** - Tokens de autenticação
+- **Spring Boot Validation** - Validação de dados
+- **Swagger/OpenAPI 2.2.0** - Documentação da API
 
-### Segurança
-- **Spring Security** - Segurança da aplicação
-- **JWT (JSON Web Token)** - Autenticação stateless
-- **BCrypt** - Criptografia de senhas
+## Requisitos do Sistema
 
-### Banco de Dados
-- **MySQL** - Banco de dados principal
-- **Spring Data JPA** - Abstração de acesso a dados
-- **Hibernate** - ORM
+![Java](https://img.shields.io/badge/java-%23ED8B00.svg?style=for-the-badge&logo=openjdk&logoColor=white)
+![Maven](https://img.shields.io/badge/Apache%20Maven-C71A36?style=for-the-badge&logo=Apache%20Maven&logoColor=white)
+![MySQL](https://img.shields.io/badge/mysql-%2300f.svg?style=for-the-badge&logo=mysql&logoColor=white)
 
-### Comunicação
-- **Spring Mail** - Envio de emails
-- **SMTP Gmail** - Provedor de email
+- **Java** >= 21
+- **Maven** >= 3.8.0
+- **MySQL** >= 8.0
+- **Conta Gmail** (para envio de emails)
 
-### Documentação e Monitoramento
-- **SpringDoc OpenAPI 3** - Documentação da API
-- **Swagger UI** - Interface da documentação
-- **Spring Actuator** - Monitoramento da aplicação
+## Instalação e Configuração
 
-### Testes
-- **Spring Boot Test** - Framework de testes
-- **H2 Database** - Banco em memória para testes
-- **JUnit 5** - Testes unitários
-
-## 🏗️ Arquitetura
-
-O projeto segue os princípios da **Clean Architecture**:
-
-```
-src/
-├── main/
-│   ├── java/com/project/softwave/auth/
-│   │   ├── adapters/           # Camada de Adapters
-│   │   │   ├── external/       # Integrações externas (Email, Cookies)
-│   │   │   ├── persistence/    # Persistência de dados
-│   │   │   └── web/           # Controllers REST
-│   │   ├── application/        # Camada de Aplicação
-│   │   │   ├── dto/           # Data Transfer Objects
-│   │   │   ├── services/      # Serviços de aplicação
-│   │   │   └── usecases/      # Casos de uso
-│   │   ├── domain/            # Camada de Domínio
-│   │   │   ├── entities/      # Entidades de negócio
-│   │   │   └── ports/         # Interfaces/Contratos
-│   │   └── infrastructure/    # Camada de Infraestrutura
-│   │       ├── config/        # Configurações
-│   │       └── security/      # Configurações de segurança
-│   └── resources/
-│       └── application.yml    # Configurações da aplicação
-```
-
-## ⚙️ Pré-requisitos
-
-Antes de executar o projeto, certifique-se de ter instalado:
-
-- **Java 21** ou superior
-- **Maven 3.6+**
-- **MySQL 8.0+**
-- **Git**
-
-## 🔧 Instalação e Configuração
-
-### 1. Clone o repositório
+### 1. Clone o Repositório
 
 ```bash
-git clone https://github.com/SoftWave-SPTech/API-AUTH-MAIL.git
+git clone <repository-url>
 cd API-AUTH-MAIL
 ```
 
-### 2. Configure o banco de dados
+### 2. Configuração do Banco de Dados
 
-Crie um banco de dados MySQL:
+O serviço de autenticação utiliza o mesmo banco de dados principal do projeto:
 
 ```sql
-CREATE DATABASE softwave;
+-- O banco softwave_db já deve estar criado pelo backend principal
+-- Caso não esteja, execute:
+CREATE DATABASE IF NOT EXISTS softwave_db;
+CREATE USER IF NOT EXISTS 'softwave'@'localhost' IDENTIFIED BY 'softwave123';
+GRANT ALL PRIVILEGES ON softwave_db.* TO 'softwave'@'localhost';
+FLUSH PRIVILEGES;
 ```
 
-### 3. Configure as variáveis de ambiente
+### 3. Configuração de Ambiente
 
-Configure as seguintes variáveis de ambiente ou edite o arquivo `application.yml`:
+Crie um arquivo `application-local.yml` em `src/main/resources/`:
 
-**Banco de Dados:**
 ```yaml
 spring:
+  application:
+    name: auth-service
+  
   datasource:
-    url: jdbc:mysql://localhost:3306/softwave
-    username: seu_usuario
-    password: sua_senha
-```
-
-**Email (Gmail):**
-```yaml
-spring:
+    url: jdbc:mysql://localhost:3306/softwave_db
+    username: softwave
+    password: softwave123
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+    show-sql: true
+  
+  # Configuração de Email
   mail:
-    username: ${MAIL_USERNAME:seu_email@gmail.com}
-    password: ${MAIL_PASSWORD:sua_senha_de_app}
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:seu-email@gmail.com}
+    password: ${MAIL_PASSWORD:sua-senha-app}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+# Configurações JWT
+jwt:
+  secret: ${JWT_SECRET:auth-service-super-secret-key-2025}
+  validity: ${JWT_VALIDITY:3600} # 1 hora em segundos
+  refresh-validity: ${JWT_REFRESH_VALIDITY:604800} # 7 dias em segundos
+
+# Servidor
+server:
+  port: 8083
+
+# CORS
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:8080}
+  allowed-methods: GET,POST,PUT,DELETE,OPTIONS
+  allowed-headers: "*"
+  allow-credentials: true
+
+# Email Templates
+email:
+  templates:
+    recovery-password: "Olá {nome}, para redefinir sua senha, clique no link: {link}"
+    welcome: "Bem-vindo(a) {nome} ao sistema SoftWave!"
+  from: ${EMAIL_FROM:noreply@softwave.com}
 ```
 
-### 4. Instale as dependências
+### 4. Configuração do Gmail
+
+Para usar o Gmail como provedor de email:
+
+1. Ative a verificação em 2 etapas na sua conta Google
+2. Gere uma senha de app específica:
+   - Vá para [Gerenciar conta Google](https://myaccount.google.com/)
+   - Segurança → Verificação em duas etapas → Senhas de app
+   - Gere uma senha para "Mail"
+
+### 5. Variáveis de Ambiente
+
+Configure as seguintes variáveis:
+
+```bash
+# JWT
+export JWT_SECRET=seu-jwt-secret-super-seguro-auth-service
+export JWT_VALIDITY=3600
+export JWT_REFRESH_VALIDITY=604800
+
+# Email
+export MAIL_USERNAME=seu-email@gmail.com
+export MAIL_PASSWORD=sua-senha-app-gmail
+
+# CORS
+export CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:8080
+
+# Email Templates
+export EMAIL_FROM=noreply@softwave.com
+```
+
+### 6. Instalação das Dependências
 
 ```bash
 mvn clean install
 ```
 
-### 5. Execute a aplicação
+### 7. Executar a Aplicação
+
+#### Modo Desenvolvimento
 
 ```bash
-mvn spring-boot:run
+mvn spring-boot:run -Dspring-boot.run.profiles=local
 ```
 
-A aplicação estará disponível em: `http://localhost:8081`
-
-## 📝 Uso
-
-### Fluxo Básico de Autenticação
-
-1. **Primeiro Acesso**: Usuário recebe token por email
-2. **Cadastro de Senha**: Define senha usando o token
-3. **Login**: Autentica com email e senha
-4. **Acesso Protegido**: Usa JWT para acessar recursos
-
-### Exemplo de Login
+#### Build e Execução
 
 ```bash
-curl -X POST http://localhost:8081/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "usuario@email.com",
-    "senha": "suaSenha123"
-  }'
+mvn clean package
+java -jar target/auth-service-0.0.1-SNAPSHOT.jar
 ```
 
-## 🛠️ Endpoints da API
+#### Docker (Opcional)
+
+```bash
+docker build -t softwave/auth-service .
+docker run -p 8083:8083 softwave/auth-service
+```
+
+A aplicação estará disponível em: http://localhost:8083
+
+## Estrutura do Projeto
+
+```
+src/
+├── main/
+│   ├── java/com/project/softwave/
+│   │   ├── config/
+│   │   │   ├── SecurityConfig.java      # Configuração Spring Security
+│   │   │   ├── JwtConfig.java          # Configuração JWT
+│   │   │   ├── CorsConfig.java         # Configuração CORS
+│   │   │   └── MailConfig.java         # Configuração Email
+│   │   ├── controller/
+│   │   │   ├── AuthController.java     # Endpoints de autenticação
+│   │   │   └── MailController.java     # Endpoints de email
+│   │   ├── dto/
+│   │   │   ├── LoginRequestDto.java    # DTO de login
+│   │   │   ├── LoginResponseDto.java   # DTO de resposta login
+│   │   │   ├── RegisterRequestDto.java # DTO de cadastro
+│   │   │   └── EmailRequestDto.java    # DTO de email
+│   │   ├── entity/
+│   │   │   ├── User.java              # Entidade usuário
+│   │   │   └── RefreshToken.java      # Entidade token refresh
+│   │   ├── repository/
+│   │   │   ├── UserRepository.java    # Repositório usuário
+│   │   │   └── RefreshTokenRepository.java
+│   │   ├── service/
+│   │   │   ├── AuthService.java       # Serviço de autenticação
+│   │   │   ├── JwtService.java        # Serviço JWT
+│   │   │   ├── MailService.java       # Serviço de email
+│   │   │   └── UserService.java       # Serviço de usuário
+│   │   ├── security/
+│   │   │   ├── JwtAuthFilter.java     # Filtro JWT
+│   │   │   └── CustomUserDetails.java # UserDetails customizado
+│   │   └── exception/
+│   │       ├── AuthException.java     # Exceções de auth
+│   │       └── GlobalExceptionHandler.java
+│   └── resources/
+│       ├── application.yml            # Configuração principal
+│       ├── application-docker.yml     # Configuração Docker
+│       └── templates/                 # Templates de email
+└── test/                             # Testes
+```
+
+## Endpoints da API
 
 ### Autenticação
 
-| Método | Endpoint | Descrição |
-|--------|----------|-----------|
-| `POST` | `/auth/login` | Realizar login |
-| `POST` | `/auth/primeiro-acesso` | Enviar token de primeiro acesso |
-| `POST` | `/auth/cadastrar-senha` | Cadastrar senha inicial |
-| `POST` | `/auth/solicitar-reset-senha` | Solicitar reset de senha |
-| `POST` | `/auth/resetar-senha` | Resetar senha |
-| `POST` | `/auth/reenviar-token-primeiro-acesso` | Reenviar token |
+#### POST /auth/login
+Realiza login do usuário
 
-### Monitoramento
-
-| Método | Endpoint | Descrição |
-|--------|----------|-----------|
-| `GET` | `/actuator/health` | Status da aplicação |
-| `GET` | `/actuator/info` | Informações da aplicação |
-| `GET` | `/actuator/metrics` | Métricas da aplicação |
-
-## 📧 Configuração de Email
-
-### Gmail (Recomendado)
-
-1. Ative a **verificação em duas etapas** na sua conta Google
-2. Gere uma **senha de app** específica
-3. Configure as variáveis:
-
-```yaml
-spring:
-  mail:
-    host: smtp.gmail.com
-    port: 587
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
+**Request:**
+```json
+{
+  "email": "usuario@example.com",
+  "password": "senha123"
+}
 ```
 
-### Outros Provedores
-
-Para outros provedores SMTP, ajuste as configurações conforme necessário:
-
-```yaml
-spring:
-  mail:
-    host: seu.provedor.smtp
-    port: 587
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
+**Response:**
+```json
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiJ9...",
+  "refreshToken": "eyJhbGciOiJIUzI1NiJ9...",
+  "tokenType": "Bearer",
+  "expiresIn": 3600,
+  "user": {
+    "id": 1,
+    "email": "usuario@example.com",
+    "name": "Nome Usuario",
+    "role": "USER"
+  }
+}
 ```
 
-## 🧪 Testes
+#### POST /auth/register
+Cadastra novo usuário
 
-### Executar todos os testes
+**Request:**
+```json
+{
+  "name": "Novo Usuario",
+  "email": "novo@example.com",
+  "password": "senha123",
+  "confirmPassword": "senha123",
+  "role": "USER"
+}
+```
+
+#### POST /auth/refresh
+Renova token de acesso
+
+**Request:**
+```json
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiJ9..."
+}
+```
+
+#### POST /auth/logout
+Invalida tokens do usuário
+
+#### POST /auth/forgot-password
+Solicita recuperação de senha
+
+**Request:**
+```json
+{
+  "email": "usuario@example.com"
+}
+```
+
+#### POST /auth/reset-password
+Redefine senha com token
+
+**Request:**
+```json
+{
+  "token": "reset-token",
+  "newPassword": "novaSenha123",
+  "confirmPassword": "novaSenha123"
+}
+```
+
+### Email
+
+#### POST /mail/send
+Envia email personalizado
+
+**Request:**
+```json
+{
+  "to": "destinatario@example.com",
+  "subject": "Assunto do Email",
+  "content": "Conteúdo do email",
+  "template": "welcome"
+}
+```
+
+#### POST /mail/send-recovery
+Envia email de recuperação de senha
+
+**Request:**
+```json
+{
+  "email": "usuario@example.com"
+}
+```
+
+## Documentação da API
+
+A documentação completa está disponível via Swagger UI:
+
+- **Desenvolvimento**: http://localhost:8083/swagger-ui.html
+- **JSON**: http://localhost:8083/v3/api-docs
+
+## Segurança
+
+### Configurações JWT
+
+- **Algoritmo**: HMAC-SHA256
+- **Validade Access Token**: 1 hora (configurável)
+- **Validade Refresh Token**: 7 dias (configurável)
+- **Header**: Authorization: Bearer {token}
+
+### Senha
+
+- **Codificação**: BCrypt com força 12
+- **Validações**: 
+  - Mínimo 8 caracteres
+  - Pelo menos 1 letra maiúscula
+  - Pelo menos 1 número
+  - Pelo menos 1 caractere especial
+
+### CORS
+
+Configurado para aceitar requisições dos domínios autorizados.
+
+## Testes
+
+### Executar Testes
 
 ```bash
+# Todos os testes
 mvn test
+
+# Testes específicos
+mvn test -Dtest=AuthControllerTest
+
+# Testes de integração
+mvn test -Dtest=**/*IntegrationTest
 ```
 
-### Executar testes específicos
+### Testes de Email
+
+Para testar emails em desenvolvimento, use:
+
+```yaml
+# application-test.yml
+spring:
+  mail:
+    host: smtp.mailtrap.io  # Ou outro provedor de teste
+    port: 587
+    username: test-user
+    password: test-pass
+```
+
+## Monitoramento
+
+### Health Check
 
 ```bash
-mvn test -Dtest=AuthServiceApplicationTests
+curl http://localhost:8083/actuator/health
 ```
 
-### Coverage Report
+### Métricas
 
 ```bash
-mvn jacoco:report
+curl http://localhost:8083/actuator/metrics
 ```
 
-## 📚 Documentação da API
+## Troubleshooting
 
-A documentação interativa da API está disponível através do Swagger UI:
+### Problemas Comuns
 
-- **Swagger UI**: `http://localhost:8081/swagger-ui.html`
-- **OpenAPI JSON**: `http://localhost:8081/v3/api-docs`
+1. **Erro de autenticação Gmail**: Verifique se a senha de app está correta
+2. **JWT inválido**: Confirme se o secret está configurado corretamente
+3. **CORS Error**: Verifique se o frontend está nas origins permitidas
+4. **Conexão MySQL**: Confirme se o banco está rodando e acessível
 
-## 🔒 Segurança
+### Logs Úteis
 
-### JWT Configuration
-
-O token JWT é configurado com:
-- **Algoritmo**: HMAC SHA-256
-- **Validade**: 1 hora (3600 segundos)
-- **Secret**: Configurado em Base64
-
-### Endpoints Protegidos
-
-Todos os endpoints, exceto login e primeiro acesso, requerem autenticação JWT no header:
-
-```
-Authorization: Bearer seu_jwt_token_aqui
+```yaml
+logging:
+  level:
+    com.project.softwave.service.MailService: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.mail: DEBUG
 ```
 
-## 🚦 Status dos Serviços
+## Integração com Sistema Principal
 
-Monitore a saúde da aplicação através dos endpoints do Actuator:
+Este microserviço integra com o backend principal através de:
 
-```bash
-# Status geral
-curl http://localhost:8081/actuator/health
+- **Headers JWT**: Validação de tokens em requisições
+- **Endpoints de validação**: `/auth/validate`
+- **Sincronização de usuários**: Via API REST
 
-# Informações detalhadas
-curl http://localhost:8081/actuator/info
-```
+## Contribuição
 
-## 📊 Monitoramento
+1. Faça fork do projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/auth-improvement`)
+3. Commit suas mudanças (`git commit -m 'Melhora autenticação'`)
+4. Push para a branch (`git push origin feature/auth-improvement`)
+5. Abra um Pull Request
 
-A aplicação expõe métricas através do Spring Actuator:
+## Licença
 
-- **Health Check**: `/actuator/health`
-- **Application Info**: `/actuator/info`
-- **Metrics**: `/actuator/metrics`
-
-## 🤝 Contribuição
-
-1. **Fork** o projeto
-2. Crie uma **branch** para sua feature (`git checkout -b feature/AmazingFeature`)
-3. **Commit** suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-4. **Push** para a branch (`git push origin feature/AmazingFeature`)
-5. Abra um **Pull Request**
-
-### Padrões de Código
-
-- Siga as convenções do **Clean Code**
-- Mantenha a **Clean Architecture**
-- Escreva **testes** para novas funcionalidades
-- Documente adequadamente o código
-
-## 📄 Licença
-
-Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
-
-## 👥 Equipe
-
-**SoftWave SPTech**
-- 🌐 Website: [SoftWave](https://github.com/SoftWave-SPTech)
-- 📧 Email: contato@softwave.com
-
-## 📞 Suporte
-
-Se você encontrar algum problema ou tiver dúvidas:
-
-1. Verifique a [documentação](#documentação-da-api)
-2. Consulte as [issues abertas](https://github.com/SoftWave-SPTech/API-AUTH-MAIL/issues)
-3. Abra uma [nova issue](https://github.com/SoftWave-SPTech/API-AUTH-MAIL/issues/new)
+Este projeto é propriedade da SoftWave SPTech e destina-se ao uso exclusivo do escritório Lauriano & Leão Sociedade de Advogados.
 
 ---
 
-**Desenvolvido com ❤️ pela equipe SoftWave SPTech**
+**Desenvolvido por:** SoftWave SPTech  
+**Versão:** 0.0.1-SNAPSHOT  
+**Data:** 2025
