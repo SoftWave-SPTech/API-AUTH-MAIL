@@ -1,0 +1,73 @@
+# API-AUTH-MAIL - Configuração de Produção para Nuvem
+# Este perfil deve ser usado em ambientes de produção (EC2, ECS, etc.)
+# Todas as variáveis sensíveis DEVEM ser fornecidas via variáveis de ambiente
+
+server:
+  port: ${SERVER_PORT:8083}
+
+spring:
+  application:
+    name: auth-service
+  
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: false
+  
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+# JWT Configuration - Secret obrigatório via ENV em produção
+jwt:
+  secret: ${JWT_SECRET}
+  validity: ${JWT_VALIDITY:3600}
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# Swagger/OpenAPI - Desabilitado em produção
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: false
+
+# Logging para produção - CloudWatch
+logging:
+  level:
+    root: INFO
+    com.project.softwave: INFO
+    org.springframework.security: WARN
+    org.hibernate: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: /var/log/softwave/auth-service.log
+
