@@ -51,6 +51,7 @@ jobs:
           proxy_username: ${{ secrets.EC2_USER }}
           proxy_key: ${{ secrets.EC2_SSH_KEY }}
           script_stop: true
+          command_timeout: 30m
           # A linha 'host_fingerprint' foi removida pois causava erro
           
           script: |
