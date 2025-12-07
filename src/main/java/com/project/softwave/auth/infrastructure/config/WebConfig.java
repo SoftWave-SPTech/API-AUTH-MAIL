@@ -5,11 +5,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;               // <--- adicionado
-import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
@@ -39,13 +34,21 @@ public class WebConfig implements WebMvcConfigurer {
                 .addResourceLocations("file:" + pastaFotosPerfis + "/");
     }
 
+    /**
+     * Configuração de CORS permissiva para desenvolvimento.
+     * ATENÇÃO: usar apenas em ambiente de desenvolvimento/testes.
+     */
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:5173")
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                .allowedHeaders("*")
+                // Usar allowedOriginPatterns para suportar "*" com allowCredentials(true)
+                .allowedOriginPatterns("*")
+                .allowedMethods("*")   // permite todos os métodos
+                .allowedHeaders("*")   // permite todos os headers
                 .allowCredentials(true)
-                .exposedHeaders("Set-Cookie"); // Permite exposição de cookies
+                // expõe headers úteis pro front — não tem wildcard confiável em todos os browsers,
+                // então listamos os mais comuns
+                .exposedHeaders("Set-Cookie", "Authorization", "Content-Disposition")
+                .maxAge(3600);
     }
 }
