@@ -40,7 +40,7 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         // Tente pegar origem via env (CORS_ALLOWED_ORIGINS como "http://a,http://b")
-        String env = System.getenv("CORS_ALLOWED_ORIGINS");
+        String env = null;
         List<String> allowed;
         if (env != null && !env.isBlank()) {
             allowed = Arrays.stream(env.split(","))
