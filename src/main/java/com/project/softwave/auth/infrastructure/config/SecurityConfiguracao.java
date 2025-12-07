@@ -1,9 +1,7 @@
 package com.project.softwave.auth.infrastructure.config;
 
 import com.project.softwave.auth.application.services.AutenticacaoService;
-import com.project.softwave.auth.infrastructure.security.AutenticacaoEntryPoint;
 import com.project.softwave.auth.infrastructure.security.AutenticacaoFilter;
-import com.project.softwave.auth.infrastructure.security.AutenticacaoProvider;
 import com.project.softwave.auth.infrastructure.security.GerenciadorTokenJwt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -39,9 +37,6 @@ public class SecurityConfiguracao {
     @Autowired
     private AutenticacaoService autenticacaoService;
 
-    @Autowired
-    private AutenticacaoEntryPoint autenticacaoJwtEntryPoint;
-
     private static final AntPathRequestMatcher[] URLS_PERMITIDAS = {
             new AntPathRequestMatcher("/swagger-ui/**"),
             new AntPathRequestMatcher("/swagger-ui.html"),
@@ -76,8 +71,7 @@ public class SecurityConfiguracao {
                         .anyRequest()
                         .authenticated()
                 )
-                .exceptionHandling(handling -> handling
-                        .authenticationEntryPoint(autenticacaoJwtEntryPoint))
+                // removido AuthenticationEntryPoint customizado que não existe no projeto
                 .sessionManagement(management -> management
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
@@ -86,19 +80,25 @@ public class SecurityConfiguracao {
         return http.build();
     }
 
+    /**
+     * Cria o AuthenticationManager registrando o AutenticacaoService como UserDetailsService.
+     * Observação: isto pressupõe que AutenticacaoService implementa UserDetailsService.
+     * Se não implementar, substitua por um AuthenticationProvider apropriado (ex: DaoAuthenticationProvider).
+     */
     @Bean
     public AuthenticationManager authManager(HttpSecurity http) throws Exception {
         AuthenticationManagerBuilder authenticationManagerBuilder =
                 http.getSharedObject(AuthenticationManagerBuilder.class);
-        authenticationManagerBuilder.authenticationProvider(new AutenticacaoProvider(autenticacaoService, passwordEncoder()));
+
+        // registra o service como UserDetailsService e define o passwordEncoder
+        authenticationManagerBuilder
+                .userDetailsService(autenticacaoService)
+                .passwordEncoder(passwordEncoder());
+
         return authenticationManagerBuilder.build();
     }
 
-    @Bean
-    public AutenticacaoEntryPoint jwtAuthenticationEntryPointBean() {
-        return new AutenticacaoEntryPoint();
-    }
-
+    // Mantive apenas os beans realmente usados na configuração atual
     @Bean
     public AutenticacaoFilter jwtAuthenticationFilterBean() {
         return new AutenticacaoFilter(autenticacaoService, jwtAuthenticationUtilBean());
@@ -115,8 +115,7 @@ public class SecurityConfiguracao {
     }
 
     /**
-     * CORS totalmente permissivo.
-     * ATENÇÃO: usar somente em desenvolvimento/testes. Em produção, restrinja allowedOriginPatterns a domínios confiáveis.
+     * CORS totalmente permissivo (apenas para desenvolvimento).
      */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
