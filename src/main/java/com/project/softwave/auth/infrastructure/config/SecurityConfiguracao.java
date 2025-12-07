@@ -1,7 +1,9 @@
 package com.project.softwave.auth.infrastructure.config;
 
 import com.project.softwave.auth.application.services.AutenticacaoService;
+import com.project.softwave.auth.infrastructure.security.AutenticacaoEntryPoint;
 import com.project.softwave.auth.infrastructure.security.AutenticacaoFilter;
+import com.project.softwave.auth.infrastructure.security.AutenticacaoProvider;
 import com.project.softwave.auth.infrastructure.security.GerenciadorTokenJwt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -112,76 +114,37 @@ public class SecurityConfiguracao {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * CORS totalmente permissivo.
+     * ATENÇÃO: usar somente em desenvolvimento/testes. Em produção, restrinja allowedOriginPatterns a domínios confiáveis.
+     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuracao = new CorsConfiguration();
+        CorsConfiguration config = new CorsConfiguration();
 
-        // Permite credenciais (cookies, headers de autenticação)
-        configuracao.setAllowCredentials(true);
+        // Permitimos padrões curinga para que o Spring possa fazer echo das origens
+        config.setAllowedOriginPatterns(List.of("*"));
 
-        // Lê origens permitidas de variável de ambiente CORS_ALLOWED_ORIGINS ou usa valores padrão para desenvolvimento
-        String allowedOriginsEnv = System.getenv("CORS_ALLOWED_ORIGINS");
-        if (allowedOriginsEnv != null && !allowedOriginsEnv.isBlank()) {
-            List<String> origins = Arrays.stream(allowedOriginsEnv.split(","))
-                    .map(String::trim)
-                    .toList();
-            configuracao.setAllowedOrigins(origins);
-            System.out.println("CORS allowed origins from env: " + origins);
-        } else {
-            // Valores padrão para desenvolvimento local
-            List<String> defaults = List.of(
-                    "http://localhost:5173",
-                    "http://localhost:3000",
-                    "http://localhost:8080",
-                    "http://52.3.112.88:80",
-                    "http://52.3.112.88",
-                    "http://52.3.112.88:8080"
-            );
-            configuracao.setAllowedOrigins(defaults);
-            System.out.println("CORS allowed origins default: " + defaults);
-        }
+        // Permitir credenciais (cookies, Authorization header). Se não precisar, mude para false.
+        config.setAllowCredentials(true);
 
-        // Padrões de origem (útil para curingas, mantemos alguns padrões seguros)
-        configuracao.setAllowedOriginPatterns(List.of("http://52.3.112.88", "http://localhost:*"));
+        // Permite todos os métodos HTTP
+        config.setAllowedMethods(List.of("*"));
 
-        // Métodos HTTP permitidos
-        configuracao.setAllowedMethods(
-                Arrays.asList(
-                        HttpMethod.GET.name(),
-                        HttpMethod.POST.name(),
-                        HttpMethod.PUT.name(),
-                        HttpMethod.PATCH.name(),
-                        HttpMethod.DELETE.name(),
-                        HttpMethod.OPTIONS.name(),
-                        HttpMethod.HEAD.name(),
-                        HttpMethod.TRACE.name()));
+        // Permite todos os headers
+        config.setAllowedHeaders(List.of("*"));
 
-        // Headers permitidos
-        configuracao.setAllowedHeaders(Arrays.asList(
-                "Authorization",
-                "Content-Type",
-                "X-Requested-With",
-                "Accept",
-                "Origin",
-                "Access-Control-Request-Method",
-                "Access-Control-Request-Headers"
-        ));
+        // Expõe todos os headers ao frontend (opcional)
+        config.setExposedHeaders(List.of("*", HttpHeaders.CONTENT_DISPOSITION));
 
-        // Headers expostos para o frontend
-        configuracao.setExposedHeaders(Arrays.asList(
-                HttpHeaders.CONTENT_DISPOSITION,
-                "Authorization",
-                "Content-Type",
-                "Set-Cookie"
-        ));
+        // Cache do preflight
+        config.setMaxAge(3600L);
 
-        // Tempo de cache para preflight requests
-        configuracao.setMaxAge(3600L);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
 
-        UrlBasedCorsConfigurationSource origem = new UrlBasedCorsConfigurationSource();
-        origem.registerCorsConfiguration("/**", configuracao);
-
-        return origem;
+        System.out.println("CORS permissivo habilitado (ATENÇÃO: use apenas em desenvolvimento)");
+        return source;
     }
 
 }
