@@ -1,6 +1,5 @@
 package com.project.softwave.auth.infrastructure.config;
 
-
 import com.project.softwave.auth.application.services.AutenticacaoService;
 import com.project.softwave.auth.infrastructure.security.AutenticacaoFilter;
 import com.project.softwave.auth.infrastructure.security.GerenciadorTokenJwt;
@@ -38,27 +37,29 @@ public class SecurityConfiguracao {
     @Autowired
     private AutenticacaoService autenticacaoService;
 
-    private static final AntPathRequestMatcher[] URLS_PERMITIDAS = {
-            new AntPathRequestMatcher("/swagger-ui/**")
-            ,new AntPathRequestMatcher("/swagger-ui.html")
-            ,new AntPathRequestMatcher("/swagger-resources")
-            ,new AntPathRequestMatcher("/swagger-resources/**")
-            ,new AntPathRequestMatcher("/configuration/ui")
-            ,new AntPathRequestMatcher("/configuration/security")
-            ,new AntPathRequestMatcher("/api/public/**")
-            ,new AntPathRequestMatcher("/api/public/authenticate")
-            ,new AntPathRequestMatcher("/api/processo/**")
-            ,new AntPathRequestMatcher("/webjars/**")
-            ,new AntPathRequestMatcher("/v3/api-docs/**")
-            ,new AntPathRequestMatcher("/actuator/*")
-            ,new AntPathRequestMatcher("/auth/login/**")
-            ,new AntPathRequestMatcher("/auth/primeiro-acesso/**")
-            ,new AntPathRequestMatcher("/auth/cadastrar-senha/**")
-            ,new AntPathRequestMatcher("/h2-console/**")
-            ,new AntPathRequestMatcher("/h2-console/**/**")
-            ,new AntPathRequestMatcher("/error/**")
-            ,new AntPathRequestMatcher("/**")// Libera todo o acesso (apenas para desenvolvimento, remover em produção)
+    @Autowired
+    private AutenticacaoEntryPoint autenticacaoJwtEntryPoint;
 
+    private static final AntPathRequestMatcher[] URLS_PERMITIDAS = {
+            new AntPathRequestMatcher("/swagger-ui/**"),
+            new AntPathRequestMatcher("/swagger-ui.html"),
+            new AntPathRequestMatcher("/swagger-resources"),
+            new AntPathRequestMatcher("/swagger-resources/**"),
+            new AntPathRequestMatcher("/configuration/ui"),
+            new AntPathRequestMatcher("/configuration/security"),
+            new AntPathRequestMatcher("/api/public/**"),
+            new AntPathRequestMatcher("/api/public/authenticate"),
+            new AntPathRequestMatcher("/api/processo/**"),
+            new AntPathRequestMatcher("/webjars/**"),
+            new AntPathRequestMatcher("/v3/api-docs/**"),
+            new AntPathRequestMatcher("/actuator/*"),
+            new AntPathRequestMatcher("/auth/login/**"),
+            new AntPathRequestMatcher("/auth/primeiro-acesso/**"),
+            new AntPathRequestMatcher("/auth/cadastrar-senha/**"),
+            new AntPathRequestMatcher("/h2-console/**"),
+            new AntPathRequestMatcher("/h2-console/**/**"),
+            new AntPathRequestMatcher("/error/**"),
+            new AntPathRequestMatcher("/**") // Libera todo o acesso (apenas para desenvolvimento, remover em produção)
     };
 
     @Bean
@@ -74,7 +75,7 @@ public class SecurityConfiguracao {
                         .authenticated()
                 )
                 .exceptionHandling(handling -> handling
-                        .authenticationEntryPoint(jwtAuthenticationEntryPointBean()))
+                        .authenticationEntryPoint(autenticacaoJwtEntryPoint))
                 .sessionManagement(management -> management
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
@@ -114,52 +115,73 @@ public class SecurityConfiguracao {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuracao = new CorsConfiguration();
+
+        // Permite credenciais (cookies, headers de autenticação)
         configuracao.setAllowCredentials(true);
-    
-        // Lê do env corretamente
-        String allowedOriginsEnv = null;
-        List<String> origins;
-    
+
+        // Lê origens permitidas de variável de ambiente CORS_ALLOWED_ORIGINS ou usa valores padrão para desenvolvimento
+        String allowedOriginsEnv = System.getenv("CORS_ALLOWED_ORIGINS");
         if (allowedOriginsEnv != null && !allowedOriginsEnv.isBlank()) {
-            origins = Arrays.stream(allowedOriginsEnv.split(","))
+            List<String> origins = Arrays.stream(allowedOriginsEnv.split(","))
                     .map(String::trim)
-                    .flatMap(orig -> {
-                        if (orig.endsWith(":80")) {
-                            return List.of(orig, orig.replaceFirst(":80$", "")).stream();
-                        }
-                        return List.of(orig).stream();
-                    })
-                    .distinct()
                     .toList();
+            configuracao.setAllowedOrigins(origins);
+            System.out.println("CORS allowed origins from env: " + origins);
         } else {
-            // defaults, garanta que inclui o IP do front (sem :80)
-            origins = List.of(
-                "http://localhost:5173",
-                "http://localhost:3000",
-                "http://52.3.112.88",
-                "http://52.3.112.88:80",
-                "http://52.3.112.88:8080"
+            // Valores padrão para desenvolvimento local
+            List<String> defaults = List.of(
+                    "http://localhost:5173",
+                    "http://localhost:3000",
+                    "http://localhost:8080",
+                    "http://52.3.112.88:80",
+                    "http://52.3.112.88",
+                    "http://52.3.112.88:8080"
             );
+            configuracao.setAllowedOrigins(defaults);
+            System.out.println("CORS allowed origins default: " + defaults);
         }
-    
-        configuracao.setAllowedOrigins(origins);
-        // fallback: patterns (útil se quiser curingas), não use "*" com allowCredentials(true)
+
+        // Padrões de origem (útil para curingas, mantemos alguns padrões seguros)
         configuracao.setAllowedOriginPatterns(List.of("http://52.3.112.88", "http://localhost:*"));
-    
-        configuracao.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuracao.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin"));
-        configuracao.setExposedHeaders(List.of(HttpHeaders.CONTENT_DISPOSITION, "Authorization", "Content-Type", "Set-Cookie"));
+
+        // Métodos HTTP permitidos
+        configuracao.setAllowedMethods(
+                Arrays.asList(
+                        HttpMethod.GET.name(),
+                        HttpMethod.POST.name(),
+                        HttpMethod.PUT.name(),
+                        HttpMethod.PATCH.name(),
+                        HttpMethod.DELETE.name(),
+                        HttpMethod.OPTIONS.name(),
+                        HttpMethod.HEAD.name(),
+                        HttpMethod.TRACE.name()));
+
+        // Headers permitidos
+        configuracao.setAllowedHeaders(Arrays.asList(
+                "Authorization",
+                "Content-Type",
+                "X-Requested-With",
+                "Accept",
+                "Origin",
+                "Access-Control-Request-Method",
+                "Access-Control-Request-Headers"
+        ));
+
+        // Headers expostos para o frontend
+        configuracao.setExposedHeaders(Arrays.asList(
+                HttpHeaders.CONTENT_DISPOSITION,
+                "Authorization",
+                "Content-Type",
+                "Set-Cookie"
+        ));
+
+        // Tempo de cache para preflight requests
         configuracao.setMaxAge(3600L);
-    
+
         UrlBasedCorsConfigurationSource origem = new UrlBasedCorsConfigurationSource();
         origem.registerCorsConfiguration("/**", configuracao);
-    
-        // Log (stdout) para podermos ver no docker logs quais origens foram aplicadas
-        System.out.println("CORS allowed origins: " + origins);
-        System.out.println("CORS allowed origin patterns: " + configuracao.getAllowedOriginPatterns());
-    
+
         return origem;
     }
 
 }
- 
