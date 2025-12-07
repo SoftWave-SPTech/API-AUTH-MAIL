@@ -15,9 +15,11 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 import java.util.Optional;
 
@@ -33,12 +35,16 @@ public class LoginUseCase {
     @Autowired
     private AuthenticationManager authenticationManager;
 
+    @PersistenceContext
+    private EntityManager entityManager;
+
+    @Transactional
     public UsuarioTokenDTO autenticar(UsuarioLoginDto usuarioLoginDto) {
         try {
             final UsernamePasswordAuthenticationToken credentials =
                     new UsernamePasswordAuthenticationToken(usuarioLoginDto.getEmail(), usuarioLoginDto.getSenha());
 
-            Usuario usuarioAutenticado = usuarioRepository.findByEmail(usuarioLoginDto.getEmail())
+                Usuario usuarioAutenticado = usuarioRepository.findByEmail(usuarioLoginDto.getEmail())
                     .orElseThrow(() -> new EntidadeNaoEncontradaException("Email do usuário não cadastrado! verifique com o administrador."));
 
             if (!usuarioAutenticado.getAtivo()) {
@@ -56,24 +62,63 @@ public class LoginUseCase {
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            String tipoUsuario = usuarioAutenticado.getClass().getSimpleName();
+            // Busca novamente com o tipo correto usando o ID para garantir o carregamento do tipo concreto
+            Usuario usuarioComTipoCorreto = entityManager.find(Usuario.class, usuarioAutenticado.getId());
+            
+            String tipoUsuario;
             String nome;
             
-            if (usuarioAutenticado instanceof UsuarioFisico) {
-                nome = ((UsuarioFisico) usuarioAutenticado).getNome();
-            } else if (usuarioAutenticado instanceof UsuarioJuridico) {
-                nome = ((UsuarioJuridico) usuarioAutenticado).getNomeFantasia();
+            // Primeiro tenta usar instanceof
+            if (usuarioComTipoCorreto instanceof AdvogadoFisico) {
+                tipoUsuario = "advogado_fisico";
+                nome = ((AdvogadoFisico) usuarioComTipoCorreto).getNome();
+            } else if (usuarioComTipoCorreto instanceof AdvogadoJuridico) {
+                tipoUsuario = "advogado_juridico";
+                nome = ((AdvogadoJuridico) usuarioComTipoCorreto).getNomeFantasia();
+            } else if (usuarioComTipoCorreto instanceof UsuarioFisico) {
+                tipoUsuario = "usuario_fisico";
+                nome = ((UsuarioFisico) usuarioComTipoCorreto).getNome();
+            } else if (usuarioComTipoCorreto instanceof UsuarioJuridico) {
+                tipoUsuario = "usuario_juridico";
+                nome = ((UsuarioJuridico) usuarioComTipoCorreto).getNomeFantasia();
             } else {
-                nome = usuarioAutenticado.getEmail(); // Fallback para email
+                // Fallback usando o campo tipoUsuario do banco de dados
+                String tipoUsuarioDb = usuarioComTipoCorreto.getTipoUsuario();
+                if (tipoUsuarioDb != null) {
+                    switch (tipoUsuarioDb) {
+                        case "AdvogadoFisico":
+                            tipoUsuario = "advogado_fisico";
+                            // Busca o objeto como UsuarioFisico para acessar o nome
+                            UsuarioFisico advFisico = entityManager.find(UsuarioFisico.class, usuarioComTipoCorreto.getId());
+                            nome = advFisico != null ? advFisico.getNome() : usuarioComTipoCorreto.getEmail();
+                            break;
+                        case "AdvogadoJuridico":
+                            tipoUsuario = "advogado_juridico";
+                            UsuarioJuridico advJuridico = entityManager.find(UsuarioJuridico.class, usuarioComTipoCorreto.getId());
+                            nome = advJuridico != null ? advJuridico.getNomeFantasia() : usuarioComTipoCorreto.getEmail();
+                            break;
+                        case "usuario_fisico":
+                            tipoUsuario = "usuario_fisico";
+                            UsuarioFisico userFisico = entityManager.find(UsuarioFisico.class, usuarioComTipoCorreto.getId());
+                            nome = userFisico != null ? userFisico.getNome() : usuarioComTipoCorreto.getEmail();
+                            break;
+                        case "usuario_juridico":
+                            tipoUsuario = "usuario_juridico";
+                            UsuarioJuridico userJuridico = entityManager.find(UsuarioJuridico.class, usuarioComTipoCorreto.getId());
+                            nome = userJuridico != null ? userJuridico.getNomeFantasia() : usuarioComTipoCorreto.getEmail();
+                            break;
+                        default:
+                            tipoUsuario = tipoUsuarioDb.toLowerCase();
+                            nome = usuarioComTipoCorreto.getEmail();
+                    }
+                } else {
+                    tipoUsuario = "fallback";
+                    nome = usuarioComTipoCorreto.getEmail();
+                }
             }
 
-            final String token = tokenService.generateToken(authentication, tipoUsuario, nome, usuarioAutenticado.getId());
-            String role = authentication.getAuthorities().stream()
-                    .findFirst()
-                    .map(GrantedAuthority::getAuthority)
-                    .orElse("ROLE_USER");
-
-            return UsuarioTokenDTO.toDTO(usuarioAutenticado, token, role, nome, usuarioAutenticado.getFoto());
+            final String token = tokenService.generateToken(authentication, tipoUsuario, nome, usuarioComTipoCorreto.getId(), usuarioComTipoCorreto.getFoto());
+            return UsuarioTokenDTO.toDTO(usuarioComTipoCorreto, token, usuarioComTipoCorreto.getRole().toString(), nome, usuarioComTipoCorreto.getFoto());
 
         } catch (Exception e) {
             if(e.getClass().equals(AuthenticationException.class) || e.getClass().equals(BadCredentialsException.class)) {

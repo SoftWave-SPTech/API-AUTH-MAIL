@@ -9,7 +9,7 @@ public class CookieService {
 
     public void addJwtCookie(HttpServletResponse response, String jwtToken) {
         Cookie jwtCookie = new Cookie("jwt", jwtToken);
-        jwtCookie.setHttpOnly(true);
+        jwtCookie.setHttpOnly(false);
         jwtCookie.setSecure(true); // Use HTTPS in production
         jwtCookie.setPath("/");
         jwtCookie.setMaxAge(3600); // Expiration time in seconds
@@ -18,7 +18,7 @@ public class CookieService {
 
     public void clearJwtCookie(HttpServletResponse response) {
         Cookie jwtCookie = new Cookie("jwt", null);
-        jwtCookie.setHttpOnly(true);
+        jwtCookie.setHttpOnly(false);
         jwtCookie.setSecure(true); // Use HTTPS in production
         jwtCookie.setPath("/");
         jwtCookie.setMaxAge(0); // Delete the cookie

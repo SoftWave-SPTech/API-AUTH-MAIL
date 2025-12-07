@@ -34,7 +34,7 @@ public class GerenciadorTokenJwt implements TokenService {
     }
 
     @Override
-    public String generateToken(final Authentication authentication, String tipoUsuario, String nome, Integer id) {
+    public String generateToken(final Authentication authentication, String tipoUsuario, String nome, Integer id, String fotoPerfil) {
         final String authorities = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(","));
@@ -45,6 +45,7 @@ public class GerenciadorTokenJwt implements TokenService {
                 .claim("tipoUsuario", tipoUsuario)
                 .claim("nome", nome)
                 .claim("id", id)
+                .claim("fotoPerfil", fotoPerfil)
                 .signWith(parseSecret())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + jwtTokenValidity * 1_000))
