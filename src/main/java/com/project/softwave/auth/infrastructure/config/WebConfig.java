@@ -1,4 +1,4 @@
-package com.project.api-auth-mail.config;
+package com.project.softwave.auth.infrastructure.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
