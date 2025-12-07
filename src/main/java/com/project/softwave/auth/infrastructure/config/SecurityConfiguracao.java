@@ -158,14 +158,4 @@ public class SecurityConfiguracao {
 
         return origem;
     }
-
-     @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**")
-                .allowedOrigins("http://localhost:5173")
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                .allowedHeaders("*")
-                .allowCredentials(true)
-                .exposedHeaders("Set-Cookie"); // Permite exposição de cookies
-    }
 }
