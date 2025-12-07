@@ -111,7 +111,9 @@ public class SecurityConfiguracao {
             configuracao.setAllowedOrigins(List.of(
                 "http://localhost:5173",
                 "http://localhost:3000",
-                "http://localhost:8080"
+                "http://localhost:8080",
+                "http://52.3.112.88:80",
+                "http://3.82.74.106:80"
             ));
         }
         
