@@ -2,6 +2,8 @@ package com.project.softwave.auth.infrastructure.config;
 
 
 import com.project.softwave.auth.application.services.AutenticacaoService;
+import com.project.softwave.auth.infrastructure.security.AutenticacaoFilter;
+import com.project.softwave.auth.infrastructure.security.GerenciadorTokenJwt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
