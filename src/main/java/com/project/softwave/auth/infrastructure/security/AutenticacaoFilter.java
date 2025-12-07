@@ -46,6 +46,12 @@ public class AutenticacaoFilter extends OncePerRequestFilter {
             }
         }
 
+        // Se for preflight, apenas passe adiante para que o CorsFilter responda.
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         if ((Objects.nonNull(requestTokenHeader) && requestTokenHeader.startsWith("Bearer ") || (jwtToken != null))) {
             if(requestTokenHeader != null) {
                 jwtToken = requestTokenHeader.substring(7);
