@@ -61,7 +61,7 @@ class LoginUseCaseTest {
 
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(authentication);
         when(usuarioRepository.findByEmail("email@test.com")).thenReturn(Optional.of(usuario));
-        when(tokenService.generateToken(any(), anyString(), anyString(), anyInt())).thenReturn("token123");
+        when(tokenService.generateToken(any(), anyString(), anyString(), anyInt(), anyString())).thenReturn("token123");
         doReturn(Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))).when(authentication).getAuthorities();
 
         UsuarioTokenDTO result = loginUseCase.autenticar(loginDto);
@@ -85,7 +85,7 @@ class LoginUseCaseTest {
 
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(authentication);
         when(usuarioRepository.findByEmail("juridico@test.com")).thenReturn(Optional.of(usuario));
-        when(tokenService.generateToken(any(), anyString(), anyString(), anyInt())).thenReturn("token456");
+        when(tokenService.generateToken(any(), anyString(), anyString(), anyInt(), anyString())).thenReturn("token456");
         doReturn(Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADMIN"))).when(authentication).getAuthorities();
 
         UsuarioTokenDTO result = loginUseCase.autenticar(loginDto);
@@ -136,7 +136,7 @@ class LoginUseCaseTest {
 
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(authentication);
         when(usuarioRepository.findByEmail("advfisico@test.com")).thenReturn(Optional.of(usuario));
-        when(tokenService.generateToken(any(), anyString(), anyString(), anyInt())).thenReturn("token789");
+        when(tokenService.generateToken(any(), anyString(), anyString(), anyInt(), anyString())).thenReturn("token789");
         doReturn(Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADV"))).when(authentication).getAuthorities();
 
         UsuarioTokenDTO result = loginUseCase.autenticar(loginDto);
@@ -160,7 +160,7 @@ class LoginUseCaseTest {
 
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(authentication);
         when(usuarioRepository.findByEmail("advjuridico@test.com")).thenReturn(Optional.of(usuario));
-        when(tokenService.generateToken(any(), anyString(), anyString(), anyInt())).thenReturn("token101");
+        when(tokenService.generateToken(any(), anyString(), anyString(), anyInt(), anyString())).thenReturn("token101");
         doReturn(Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADVJ"))).when(authentication).getAuthorities();
 
         UsuarioTokenDTO result = loginUseCase.autenticar(loginDto);

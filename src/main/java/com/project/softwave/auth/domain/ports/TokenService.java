@@ -4,7 +4,7 @@ import org.springframework.security.core.Authentication;
 
 public interface TokenService {
     
-    String generateToken(Authentication authentication, String tipoUsuario, String nome, Integer id);
+    String generateToken(Authentication authentication, String tipoUsuario, String nome, Integer id, String foto);
     
     String getUsernameFromToken(String token);
     
