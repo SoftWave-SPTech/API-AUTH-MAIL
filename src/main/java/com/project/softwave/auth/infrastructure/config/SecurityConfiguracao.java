@@ -37,6 +37,9 @@ public class SecurityConfiguracao {
     @Autowired
     private AutenticacaoService autenticacaoService;
 
+    @Autowired
+    private AutenticacaoEntryPoint autenticacaoJwtEntryPoint;
+
     private static final AntPathRequestMatcher[] URLS_PERMITIDAS = {
             new AntPathRequestMatcher("/swagger-ui/**"),
             new AntPathRequestMatcher("/swagger-ui.html"),
@@ -56,49 +59,43 @@ public class SecurityConfiguracao {
             new AntPathRequestMatcher("/h2-console/**"),
             new AntPathRequestMatcher("/h2-console/**/**"),
             new AntPathRequestMatcher("/error/**"),
-            new AntPathRequestMatcher("/**") // Libera todo o acesso (apenas para desenvolvimento, remover em produção)
+            new AntPathRequestMatcher("/**") // cuidado: dev only
     };
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .headers(headers -> headers
-                        .frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
-                .cors(Customizer.withDefaults())
-                .csrf(CsrfConfigurer<HttpSecurity>::disable)
-                .authorizeHttpRequests(authorize -> authorize.requestMatchers(URLS_PERMITIDAS)
-                        .permitAll()
-                        .anyRequest()
-                        .authenticated()
-                )
-                // removido AuthenticationEntryPoint customizado que não existe no projeto
-                .sessionManagement(management -> management
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+            .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
+            .cors(Customizer.withDefaults())
+            .csrf(CsrfConfigurer<HttpSecurity>::disable)
+            .authorizeHttpRequests(authorize -> authorize
+                    // libera preflight OPTIONS para todas as rotas
+                    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                    // urls permitidas explicitamente
+                    .requestMatchers(URLS_PERMITIDAS).permitAll()
+                    .anyRequest().authenticated()
+            )
+            .exceptionHandling(handling -> handling
+                    .authenticationEntryPoint(autenticacaoJwtEntryPoint))
+            .sessionManagement(management -> management
+                    .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
+        // Certifique-se de que o CorsFilter roda antes do seu filter custom (cors(Customizer) já cuida disso).
         http.addFilterBefore(jwtAuthenticationFilterBean(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
-    /**
-     * Cria o AuthenticationManager registrando o AutenticacaoService como UserDetailsService.
-     * Observação: isto pressupõe que AutenticacaoService implementa UserDetailsService.
-     * Se não implementar, substitua por um AuthenticationProvider apropriado (ex: DaoAuthenticationProvider).
-     */
     @Bean
     public AuthenticationManager authManager(HttpSecurity http) throws Exception {
-        AuthenticationManagerBuilder authenticationManagerBuilder =
-                http.getSharedObject(AuthenticationManagerBuilder.class);
+        AuthenticationManagerBuilder authBuilder = http.getSharedObject(AuthenticationManagerBuilder.class);
 
-        // registra o service como UserDetailsService e define o passwordEncoder
-        authenticationManagerBuilder
-                .userDetailsService(autenticacaoService)
-                .passwordEncoder(passwordEncoder());
+        // Registra seu AuthenticationProvider (classe que você já tem)
+        authBuilder.authenticationProvider(new AutenticacaoProvider(autenticacaoService, passwordEncoder()));
 
-        return authenticationManagerBuilder.build();
+        return authBuilder.build();
     }
 
-    // Mantive apenas os beans realmente usados na configuração atual
     @Bean
     public AutenticacaoFilter jwtAuthenticationFilterBean() {
         return new AutenticacaoFilter(autenticacaoService, jwtAuthenticationUtilBean());
@@ -115,35 +112,21 @@ public class SecurityConfiguracao {
     }
 
     /**
-     * CORS totalmente permissivo (apenas para desenvolvimento).
+     * CORS permissivo para dev — já existia similar no seu código.
      */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-
-        // Permitimos padrões curinga para que o Spring possa fazer echo das origens
         config.setAllowedOriginPatterns(List.of("*"));
-
-        // Permitir credenciais (cookies, Authorization header). Se não precisar, mude para false.
         config.setAllowCredentials(true);
-
-        // Permite todos os métodos HTTP
         config.setAllowedMethods(List.of("*"));
-
-        // Permite todos os headers
         config.setAllowedHeaders(List.of("*"));
-
-        // Expõe todos os headers ao frontend (opcional)
         config.setExposedHeaders(List.of("*", HttpHeaders.CONTENT_DISPOSITION));
-
-        // Cache do preflight
         config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
-
-        System.out.println("CORS permissivo habilitado (ATENÇÃO: use apenas em desenvolvimento)");
+        System.out.println("CORS permissivo habilitado (dev only)");
         return source;
     }
-
 }
