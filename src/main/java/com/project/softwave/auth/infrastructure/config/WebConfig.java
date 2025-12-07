@@ -5,9 +5,11 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
-
-import java.util.Arrays;
-import java.util.List;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;               // <--- adicionado
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
@@ -39,37 +41,11 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        // Tente pegar origem via env (CORS_ALLOWED_ORIGINS como "http://a,http://b")
-        String env = null;
-        List<String> allowed;
-        if (env != null && !env.isBlank()) {
-            allowed = Arrays.stream(env.split(","))
-                            .map(String::trim)
-                            .flatMap(orig -> {
-                                // se veio com :80 adiciona variação sem :80
-                                if (orig.endsWith(":80")) {
-                                    return List.of(orig, orig.replaceFirst(":80$", "")).stream();
-                                }
-                                return List.of(orig).stream();
-                            })
-                            .distinct()
-                            .toList();
-        } else {
-            // defaults: inclui localhost e o IP do front (com e sem :80)
-            allowed = List.of(
-                "http://localhost:5173",
-                "http://localhost:3000",
-                "http://52.3.112.88",
-                "http://52.3.112.88:80",
-                "http://52.3.112.88:8080"
-            );
-        }
-
         registry.addMapping("/**")
-                .allowedOrigins(allowed.toArray(new String[0]))
+                .allowedOrigins("http://localhost:5173")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true)
-                .exposedHeaders("Set-Cookie", "Authorization", "Content-Type");
+                .exposedHeaders("Set-Cookie"); // Permite exposição de cookies
     }
 }
