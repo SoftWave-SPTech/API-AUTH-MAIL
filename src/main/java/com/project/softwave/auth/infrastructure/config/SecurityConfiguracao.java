@@ -38,11 +38,6 @@ public class SecurityConfiguracao {
     @Autowired
     private AutenticacaoService autenticacaoService;
 
-    @Bean
-    public AutenticacaoEntryPoint jwtAuthenticationEntryPointBean() {
-        return new AutenticacaoEntryPoint();
-    }
-
     private static final AntPathRequestMatcher[] URLS_PERMITIDAS = {
             new AntPathRequestMatcher("/swagger-ui/**")
             ,new AntPathRequestMatcher("/swagger-ui.html")
@@ -79,7 +74,7 @@ public class SecurityConfiguracao {
                         .authenticated()
                 )
                 .exceptionHandling(handling -> handling
-                        .authenticationEntryPoint(autenticacaoJwtEntryPoint))
+                        .authenticationEntryPoint(jwtAuthenticationEntryPointBean()))
                 .sessionManagement(management -> management
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
@@ -96,7 +91,10 @@ public class SecurityConfiguracao {
         return authenticationManagerBuilder.build();
     }
 
-
+    @Bean
+    public AutenticacaoEntryPoint jwtAuthenticationEntryPointBean() {
+        return new AutenticacaoEntryPoint();
+    }
 
     @Bean
     public AutenticacaoFilter jwtAuthenticationFilterBean() {
@@ -116,10 +114,10 @@ public class SecurityConfiguracao {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuracao = new CorsConfiguration();
-        
+
         // Permite credenciais (cookies, headers de autenticação)
         configuracao.setAllowCredentials(true);
-        
+
         // Lê origens permitidas de variável de ambiente ou usa valores padrão para desenvolvimento
         String allowedOriginsEnv = null;
         if (allowedOriginsEnv != null && !allowedOriginsEnv.isEmpty()) {
@@ -137,7 +135,7 @@ public class SecurityConfiguracao {
                 "http://52.3.112.88:8080"
             ));
         }
-        
+
         // Métodos HTTP permitidos
         configuracao.setAllowedMethods(
                 Arrays.asList(
@@ -149,7 +147,7 @@ public class SecurityConfiguracao {
                         HttpMethod.OPTIONS.name(),
                         HttpMethod.HEAD.name(),
                         HttpMethod.TRACE.name()));
-        
+
         // Headers permitidos
         configuracao.setAllowedHeaders(Arrays.asList(
                 "Authorization",
@@ -160,14 +158,14 @@ public class SecurityConfiguracao {
                 "Access-Control-Request-Method",
                 "Access-Control-Request-Headers"
         ));
-        
+
         // Headers expostos para o frontend
         configuracao.setExposedHeaders(Arrays.asList(
                 HttpHeaders.CONTENT_DISPOSITION,
                 "Authorization",
                 "Content-Type"
         ));
-        
+
         // Tempo de cache para preflight requests
         configuracao.setMaxAge(3600L);
 
@@ -177,6 +175,4 @@ public class SecurityConfiguracao {
         return origem;
     }
 }
-        return origem;
-    }
-}
+ 
