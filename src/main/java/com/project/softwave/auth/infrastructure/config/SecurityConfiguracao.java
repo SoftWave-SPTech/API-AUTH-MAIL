@@ -1,8 +1,7 @@
 package com.project.softwave.auth.infrastructure.config;
 
+
 import com.project.softwave.auth.application.services.AutenticacaoService;
-import com.project.softwave.auth.infrastructure.security.AutenticacaoFilter;
-import com.project.softwave.auth.infrastructure.security.GerenciadorTokenJwt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,8 +24,6 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer; 
 
 import java.util.Arrays;
 import java.util.List;
@@ -40,38 +37,47 @@ public class SecurityConfiguracao {
     private AutenticacaoService autenticacaoService;
 
     @Autowired
-    private GerenciadorTokenJwt gerenciadorTokenJwt;
-
-    @Autowired
-    private AutenticacaoEntryPoint autenticacaoEntryPoint;
+    private AutenticacaoEntryPoint autenticacaoJwtEntryPoint;
 
     private static final AntPathRequestMatcher[] URLS_PERMITIDAS = {
-            new AntPathRequestMatcher("/swagger-ui/**"),
-            new AntPathRequestMatcher("/swagger-ui.html"),
-            new AntPathRequestMatcher("/swagger-resources"),
-            new AntPathRequestMatcher("/swagger-resources/**"),
-            new AntPathRequestMatcher("/configuration/ui"),
-            new AntPathRequestMatcher("/configuration/security"),
-            new AntPathRequestMatcher("/v3/api-docs/**"),
-            new AntPathRequestMatcher("/api/public/**"),
-            new AntPathRequestMatcher("/auth/**"),
-            new AntPathRequestMatcher("/actuator/**"),
-            new AntPathRequestMatcher("/h2-console/**")
+            new AntPathRequestMatcher("/swagger-ui/**")
+            ,new AntPathRequestMatcher("/swagger-ui.html")
+            ,new AntPathRequestMatcher("/swagger-resources")
+            ,new AntPathRequestMatcher("/swagger-resources/**")
+            ,new AntPathRequestMatcher("/configuration/ui")
+            ,new AntPathRequestMatcher("/configuration/security")
+            ,new AntPathRequestMatcher("/api/public/**")
+            ,new AntPathRequestMatcher("/api/public/authenticate")
+            ,new AntPathRequestMatcher("/api/processo/**")
+            ,new AntPathRequestMatcher("/webjars/**")
+            ,new AntPathRequestMatcher("/v3/api-docs/**")
+            ,new AntPathRequestMatcher("/actuator/*")
+            ,new AntPathRequestMatcher("/auth/login/**")
+            ,new AntPathRequestMatcher("/auth/primeiro-acesso/**")
+            ,new AntPathRequestMatcher("/auth/cadastrar-senha/**")
+            ,new AntPathRequestMatcher("/h2-console/**")
+            ,new AntPathRequestMatcher("/h2-console/**/**")
+            ,new AntPathRequestMatcher("/error/**")
+            ,new AntPathRequestMatcher("/**")// Libera todo o acesso (apenas para desenvolvimento, remover em produção)
+
     };
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
+                .headers(headers -> headers
+                        .frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
                 .cors(Customizer.withDefaults())
-                .csrf(CsrfConfigurer::disable)
-                .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers(URLS_PERMITIDAS).permitAll()
-                        .anyRequest().authenticated()
+                .csrf(CsrfConfigurer<HttpSecurity>::disable)
+                .authorizeHttpRequests(authorize -> authorize.requestMatchers(URLS_PERMITIDAS)
+                        .permitAll()
+                        .anyRequest()
+                        .authenticated()
                 )
                 .exceptionHandling(handling -> handling
-                        .authenticationEntryPoint(autenticacaoEntryPoint))
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+                        .authenticationEntryPoint(autenticacaoJwtEntryPoint))
+                .sessionManagement(management -> management
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         http.addFilterBefore(jwtAuthenticationFilterBean(), UsernamePasswordAuthenticationFilter.class);
 
@@ -79,20 +85,31 @@ public class SecurityConfiguracao {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(HttpSecurity http, PasswordEncoder passwordEncoder) throws Exception {
-        AuthenticationManagerBuilder authenticationManagerBuilder = http.getSharedObject(AuthenticationManagerBuilder.class);
-        authenticationManagerBuilder.authenticationProvider(new AutenticacaoProvider(autenticacaoService, passwordEncoder));
+    public AuthenticationManager authManager(HttpSecurity http) throws Exception {
+        AuthenticationManagerBuilder authenticationManagerBuilder =
+                http.getSharedObject(AuthenticationManagerBuilder.class);
+        authenticationManagerBuilder.authenticationProvider(new AutenticacaoProvider(autenticacaoService, passwordEncoder()));
         return authenticationManagerBuilder.build();
+    }
+
+    @Bean
+    public AutenticacaoEntryPoint jwtAuthenticationEntryPointBean() {
+        return new AutenticacaoEntryPoint();
+    }
+
+    @Bean
+    public AutenticacaoFilter jwtAuthenticationFilterBean() {
+        return new AutenticacaoFilter(autenticacaoService, jwtAuthenticationUtilBean());
+    }
+
+    @Bean
+    public GerenciadorTokenJwt jwtAuthenticationUtilBean() {
+        return new GerenciadorTokenJwt();
     }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public AutenticacaoFilter jwtAuthenticationFilterBean() {
-        return new AutenticacaoFilter(autenticacaoService, gerenciadorTokenJwt);
     }
 
     @Bean
@@ -103,7 +120,7 @@ public class SecurityConfiguracao {
         configuracao.setAllowCredentials(true);
         
         // Lê origens permitidas de variável de ambiente ou usa valores padrão para desenvolvimento
-        String allowedOriginsEnv = System.getenv("CORS_ALLOWED_ORIGINS");
+        String allowedOriginsEnv = null;
         if (allowedOriginsEnv != null && !allowedOriginsEnv.isEmpty()) {
             // Suporta múltiplas origens separadas por vírgula
             List<String> origins = Arrays.asList(allowedOriginsEnv.split(","));
@@ -114,10 +131,9 @@ public class SecurityConfiguracao {
                 "http://localhost:5173",
                 "http://localhost:3000",
                 "http://localhost:8080",
-                "http://52.3.112.88",
                 "http://52.3.112.88:80",
-                "http://52.3.112.88:8080",
-                "http://3.82.74.106:8080"
+                "http://52.3.112.88",
+                "http://52.3.112.88:8080"
             ));
         }
         
@@ -157,6 +173,9 @@ public class SecurityConfiguracao {
         UrlBasedCorsConfigurationSource origem = new UrlBasedCorsConfigurationSource();
         origem.registerCorsConfiguration("/**", configuracao);
 
+        return origem;
+    }
+}
         return origem;
     }
 }
