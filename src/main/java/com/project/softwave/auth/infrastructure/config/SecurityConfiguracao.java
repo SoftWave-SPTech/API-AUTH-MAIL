@@ -38,8 +38,10 @@ public class SecurityConfiguracao {
     @Autowired
     private AutenticacaoService autenticacaoService;
 
-    @Autowired
-    private AutenticacaoEntryPoint autenticacaoJwtEntryPoint;
+    @Bean
+    public AutenticacaoEntryPoint jwtAuthenticationEntryPointBean() {
+        return new AutenticacaoEntryPoint();
+    }
 
     private static final AntPathRequestMatcher[] URLS_PERMITIDAS = {
             new AntPathRequestMatcher("/swagger-ui/**")
@@ -94,10 +96,7 @@ public class SecurityConfiguracao {
         return authenticationManagerBuilder.build();
     }
 
-    @Bean
-    public AutenticacaoEntryPoint jwtAuthenticationEntryPointBean() {
-        return new AutenticacaoEntryPoint();
-    }
+
 
     @Bean
     public AutenticacaoFilter jwtAuthenticationFilterBean() {
