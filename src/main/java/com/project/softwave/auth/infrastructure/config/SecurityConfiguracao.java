@@ -1,30 +1,10 @@
 package com.project.softwave.auth.infrastructure.config;
 
-import com.project.softwave.auth.application.services.AutenticacaoService;
-import com.project.softwave.auth.infrastructure.security.AutenticacaoFilter;
-import com.project.softwave.auth.infrastructure.security.GerenciadorTokenJwt;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
-import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
-import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.Arrays;
 import java.util.List;
@@ -108,52 +88,42 @@ public class SecurityConfiguracao {
             List<String> origins = Arrays.asList(allowedOriginsEnv.split(","));
             configuracao.setAllowedOrigins(origins);
         } else {
-            // Valores padrão para desenvolvimento local
-            configuracao.setAllowedOrigins(List.of(
+            allowedOrigins = List.of(
                 "http://localhost:5173",
                 "http://localhost:3000",
                 "http://localhost:8080",
+                "http://52.3.112.88",
                 "http://52.3.112.88:80",
-                "http://3.82.74.106:80"
-            ));
+                "http://52.3.112.88:8080"
+            );
         }
-        
-        // Métodos HTTP permitidos
-        configuracao.setAllowedMethods(
-                Arrays.asList(
+
+        registry.addMapping("/**")
+                .allowedOrigins(allowedOrigins.toArray(new String[0]))
+                .allowedMethods(
                         HttpMethod.GET.name(),
                         HttpMethod.POST.name(),
                         HttpMethod.PUT.name(),
                         HttpMethod.PATCH.name(),
                         HttpMethod.DELETE.name(),
-                        HttpMethod.OPTIONS.name(),
-                        HttpMethod.HEAD.name(),
-                        HttpMethod.TRACE.name()));
-        
-        // Headers permitidos
-        configuracao.setAllowedHeaders(Arrays.asList(
-                "Authorization",
-                "Content-Type",
-                "X-Requested-With",
-                "Accept",
-                "Origin",
-                "Access-Control-Request-Method",
-                "Access-Control-Request-Headers"
-        ));
-        
-        // Headers expostos para o frontend
-        configuracao.setExposedHeaders(Arrays.asList(
-                HttpHeaders.CONTENT_DISPOSITION,
-                "Authorization",
-                "Content-Type"
-        ));
-        
-        // Tempo de cache para preflight requests
-        configuracao.setMaxAge(3600L);
-
-        UrlBasedCorsConfigurationSource origem = new UrlBasedCorsConfigurationSource();
-        origem.registerCorsConfiguration("/**", configuracao);
-
-        return origem;
+                        HttpMethod.OPTIONS.name()
+                )
+                .allowedHeaders(
+                        "Authorization",
+                        "Content-Type",
+                        "X-Requested-With",
+                        "Accept",
+                        "Origin",
+                        "Access-Control-Request-Method",
+                        "Access-Control-Request-Headers"
+                )
+                .exposedHeaders(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "Authorization",
+                        "Content-Type",
+                        "Set-Cookie"
+                )
+                .allowCredentials(true)
+                .maxAge(3600);
     }
 }
