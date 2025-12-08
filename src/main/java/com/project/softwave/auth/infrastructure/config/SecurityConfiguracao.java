@@ -101,7 +101,8 @@ public class SecurityConfiguracao {
         configuracao.setAllowCredentials(true);
         
         // Lê origens permitidas de variável de ambiente ou usa valores padrão para desenvolvimento
-        String allowedOriginsEnv = System.getenv("CORS_ALLOWED_ORIGINS");
+//        String allowedOriginsEnv = System.getenv("CORS_ALLOWED_ORIGINS");
+        String allowedOriginsEnv = null; // Desabilitado para teste local
         if (allowedOriginsEnv != null && !allowedOriginsEnv.isEmpty()) {
             // Suporta múltiplas origens separadas por vírgula
             List<String> origins = Arrays.asList(allowedOriginsEnv.split(","));
