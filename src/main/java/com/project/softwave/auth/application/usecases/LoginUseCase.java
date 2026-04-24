@@ -11,11 +11,11 @@ import com.project.softwave.auth.infrastructure.exceptions.LoginIncorretoExcepti
 import com.project.softwave.auth.infrastructure.exceptions.TooManyRequestsException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import jakarta.persistence.EntityManager;
@@ -45,13 +45,17 @@ public class LoginUseCase {
                     new UsernamePasswordAuthenticationToken(usuarioLoginDto.getEmail(), usuarioLoginDto.getSenha());
 
                 Usuario usuarioAutenticado = usuarioRepository.findByEmail(usuarioLoginDto.getEmail())
-                    .orElseThrow(() -> new EntidadeNaoEncontradaException("Email do usuário não cadastrado! verifique com o administrador."));
+                    .orElseThrow(() -> new EntidadeNaoEncontradaException("Email do usuário não cadastrado!"));
 
-            if (!usuarioAutenticado.getAtivo()) {
-                throw new ForbiddenException("Usuário inativo!, realize o primeiro acesso ou verifique com o administrador.");
+            if (Boolean.FALSE.equals(usuarioAutenticado.getAtivo())) {
+                throw new ForbiddenException("Usuário inativo!");
             }
 
-            if(usuarioAutenticado.getTentativasFalhasLogin() >= 3){
+            int tentativasFalhasLogin = usuarioAutenticado.getTentativasFalhasLogin() == null
+                    ? 0
+                    : usuarioAutenticado.getTentativasFalhasLogin();
+
+            if (tentativasFalhasLogin >= 3) {
                 throw new TooManyRequestsException("Muitas tentativas de login! Por favor, faça o reset de senha!");
             }
 
@@ -63,23 +67,28 @@ public class LoginUseCase {
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
             // Busca novamente com o tipo correto usando o ID para garantir o carregamento do tipo concreto
-            Usuario usuarioComTipoCorreto = entityManager.find(Usuario.class, usuarioAutenticado.getId());
-            
+            Usuario usuarioComTipoCorreto = entityManager != null
+                    ? entityManager.find(Usuario.class, usuarioAutenticado.getId())
+                    : null;
+            if (usuarioComTipoCorreto == null) {
+                usuarioComTipoCorreto = usuarioAutenticado;
+            }
+
             String tipoUsuario;
             String nome;
             
             // Primeiro tenta usar instanceof
             if (usuarioComTipoCorreto instanceof AdvogadoFisico) {
-                tipoUsuario = "advogado_fisico";
+                tipoUsuario = "advogadoFisico";
                 nome = ((AdvogadoFisico) usuarioComTipoCorreto).getNome();
             } else if (usuarioComTipoCorreto instanceof AdvogadoJuridico) {
-                tipoUsuario = "advogado_juridico";
+                tipoUsuario = "advogadoJuridico";
                 nome = ((AdvogadoJuridico) usuarioComTipoCorreto).getNomeFantasia();
             } else if (usuarioComTipoCorreto instanceof UsuarioFisico) {
-                tipoUsuario = "usuario_fisico";
+                tipoUsuario = "usuarioFisico";
                 nome = ((UsuarioFisico) usuarioComTipoCorreto).getNome();
             } else if (usuarioComTipoCorreto instanceof UsuarioJuridico) {
-                tipoUsuario = "usuario_juridico";
+                tipoUsuario = "usuarioJuridico";
                 nome = ((UsuarioJuridico) usuarioComTipoCorreto).getNomeFantasia();
             } else {
                 // Fallback usando o campo tipoUsuario do banco de dados
@@ -87,45 +96,57 @@ public class LoginUseCase {
                 if (tipoUsuarioDb != null) {
                     switch (tipoUsuarioDb) {
                         case "AdvogadoFisico":
-                            tipoUsuario = "advogado_fisico";
+                        case "advogado_fisico":
+                        case "advogadoFisico":
+                            tipoUsuario = "advogadoFisico";
                             // Busca o objeto como UsuarioFisico para acessar o nome
-                            UsuarioFisico advFisico = entityManager.find(UsuarioFisico.class, usuarioComTipoCorreto.getId());
+                            UsuarioFisico advFisico = entityManager != null ? entityManager.find(UsuarioFisico.class, usuarioComTipoCorreto.getId()) : null;
                             nome = advFisico != null ? advFisico.getNome() : usuarioComTipoCorreto.getEmail();
                             break;
                         case "AdvogadoJuridico":
-                            tipoUsuario = "advogado_juridico";
-                            UsuarioJuridico advJuridico = entityManager.find(UsuarioJuridico.class, usuarioComTipoCorreto.getId());
+                        case "advogado_juridico":
+                        case "advogadoJuridico":
+                            tipoUsuario = "advogadoJuridico";
+                            UsuarioJuridico advJuridico = entityManager != null ? entityManager.find(UsuarioJuridico.class, usuarioComTipoCorreto.getId()) : null;
                             nome = advJuridico != null ? advJuridico.getNomeFantasia() : usuarioComTipoCorreto.getEmail();
                             break;
+                        case "UsuarioFisico":
                         case "usuario_fisico":
-                            tipoUsuario = "usuario_fisico";
-                            UsuarioFisico userFisico = entityManager.find(UsuarioFisico.class, usuarioComTipoCorreto.getId());
+                        case "usuarioFisico":
+                            tipoUsuario = "usuarioFisico";
+                            UsuarioFisico userFisico = entityManager != null ? entityManager.find(UsuarioFisico.class, usuarioComTipoCorreto.getId()) : null;
                             nome = userFisico != null ? userFisico.getNome() : usuarioComTipoCorreto.getEmail();
                             break;
+                        case "UsuarioJuridico":
                         case "usuario_juridico":
-                            tipoUsuario = "usuario_juridico";
-                            UsuarioJuridico userJuridico = entityManager.find(UsuarioJuridico.class, usuarioComTipoCorreto.getId());
+                        case "usuarioJuridico":
+                            tipoUsuario = "usuarioJuridico";
+                            UsuarioJuridico userJuridico = entityManager != null ? entityManager.find(UsuarioJuridico.class, usuarioComTipoCorreto.getId()) : null;
                             nome = userJuridico != null ? userJuridico.getNomeFantasia() : usuarioComTipoCorreto.getEmail();
                             break;
                         default:
-                            tipoUsuario = tipoUsuarioDb.toLowerCase();
-                            nome = usuarioComTipoCorreto.getEmail();
+                            throw new IllegalStateException("Tipo de usuário não suportado para login: " + tipoUsuarioDb);
                     }
                 } else {
-                    tipoUsuario = "fallback";
-                    nome = usuarioComTipoCorreto.getEmail();
+                    throw new IllegalStateException("Tipo de usuário não identificado para login");
                 }
             }
 
             final String token = tokenService.generateToken(authentication, tipoUsuario, nome, usuarioComTipoCorreto.getId(), usuarioComTipoCorreto.getFoto());
-            return UsuarioTokenDTO.toDTO(usuarioComTipoCorreto, token, usuarioComTipoCorreto.getRole().toString(), nome, usuarioComTipoCorreto.getFoto());
+            String role = authentication.getAuthorities().stream()
+                    .findFirst()
+                    .map(GrantedAuthority::getAuthority)
+                    .orElse(usuarioComTipoCorreto.getRole() != null ? usuarioComTipoCorreto.getRole().toString() : null);
+
+            return UsuarioTokenDTO.toDTO(usuarioComTipoCorreto, token, tipoUsuario, role, nome, usuarioComTipoCorreto.getFoto());
 
         } catch (Exception e) {
-            if(e.getClass().equals(AuthenticationException.class) || e.getClass().equals(BadCredentialsException.class)) {
+            if (e instanceof AuthenticationException) {
                 Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(usuarioLoginDto.getEmail());
                 if (usuarioOpt.isPresent()) {
                     Usuario usuario = usuarioOpt.get();
-                    usuario.setTentativasFalhasLogin(usuario.getTentativasFalhasLogin() + 1);
+                    int tentativasFalhasLogin = usuario.getTentativasFalhasLogin() == null ? 0 : usuario.getTentativasFalhasLogin();
+                    usuario.setTentativasFalhasLogin(tentativasFalhasLogin + 1);
                     usuarioRepository.save(usuario);
                 }
                 System.out.println("Deu erro dentro do if:" + e);

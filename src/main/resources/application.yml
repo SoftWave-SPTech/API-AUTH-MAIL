@@ -6,7 +6,7 @@ spring:
     name: auth-service
   
   datasource:
-    url: jdbc:mysql://localhost:3306/softwave?createDatabaseIfNotExist=true&useTimezone=true&serverTimezone=UTC
+    url: jdbc:mysql://localhost:3306/softwaveteste?createDatabaseIfNotExist=true&useTimezone=true&serverTimezone=UTC
     username: root
     password: 09241724
     driver-class-name: com.mysql.cj.jdbc.Driver

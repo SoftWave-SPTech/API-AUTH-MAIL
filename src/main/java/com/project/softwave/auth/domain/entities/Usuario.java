@@ -6,8 +6,6 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "usuario")
@@ -48,9 +46,9 @@ public class Usuario {
 
     private String foto;
 
-    private Boolean ativo;
+    private Boolean ativo = true;
 
-    private Integer tentativasFalhasLogin;
+    private Integer tentativasFalhasLogin = 0;
 
     private String tokenRecuperacaoSenha;
     private String tokenPrimeiroAcesso;

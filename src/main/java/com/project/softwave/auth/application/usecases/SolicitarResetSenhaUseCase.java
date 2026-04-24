@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -26,7 +25,7 @@ public class SolicitarResetSenhaUseCase {
     public void solicitarResetSenha(String email) {
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new EntidadeNaoEncontradaException("Usuário não encontrado!"));
-        if(!usuario.getAtivo()){
+        if(Boolean.FALSE.equals(usuario.getAtivo())){
             throw new ForbiddenException("Usuário inativo!, realize o primeiro acesso ou verifique com o administrador.");
         }
         String token = UUID.randomUUID().toString().replace("-", "").substring(0, 8);

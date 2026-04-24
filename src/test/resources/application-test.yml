@@ -10,6 +10,9 @@ spring:
       ddl-auto: create-drop
     show-sql: true
     database-platform: org.hibernate.dialect.H2Dialect
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
 
 jwt:
   secret: test_secret_key_for_testing_purposes_only

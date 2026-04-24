@@ -18,7 +18,7 @@ public class UsuarioTokenDTO {
     @Schema(description = "Email do usuário autenticado", example = "joao.silva@exemplo.com", required = true)
     private String email;
 
-    @Schema(description = "Tipo de usuário (ADVOGADO ou CLIENTE)", example = "ADVOGADO", required = true)
+    @Schema(description = "Tipo de usuário (usuarioFisico, advogadoFisico, usuarioJuridico, advogadoJuridico)", example = "usuarioFisico", required = true)
     private String tipoUsuario;
 
     @Schema(description = "Role do usuário autenticado", example = "ROLE_USER", required = true)
@@ -40,8 +40,8 @@ public class UsuarioTokenDTO {
         this.foto = foto;
     }
 
-    public static UsuarioTokenDTO toDTO(Usuario usuario, String token, String role, String nome, String foto) {
-        return new UsuarioTokenDTO(usuario.getId(), usuario.getEmail(), token, usuario.getClass().getSimpleName(), role, nome, foto);
+    public static UsuarioTokenDTO toDTO(Usuario usuario, String token, String tipoUsuario, String role, String nome, String foto) {
+        return new UsuarioTokenDTO(usuario.getId(), usuario.getEmail(), token, tipoUsuario, role, nome, foto);
     }
 
     // Getters e Setters

@@ -68,6 +68,7 @@ class LoginUseCaseTest {
 
         assertEquals("token123", result.getToken());
         assertEquals("ROLE_USER", result.getRole());
+        assertEquals("usuarioFisico", result.getTipoUsuario());
         assertEquals("Nome Teste", result.getNome());
         assertEquals("foto.png", result.getFoto());
         assertEquals(usuario.getId(), result.getId());
@@ -92,6 +93,7 @@ class LoginUseCaseTest {
 
         assertEquals("token456", result.getToken());
         assertEquals("ROLE_ADMIN", result.getRole());
+        assertEquals("usuarioJuridico", result.getTipoUsuario());
         assertEquals("Empresa XYZ", result.getNome());
         assertEquals("foto2.png", result.getFoto());
         assertEquals(usuario.getId(), result.getId());
@@ -143,6 +145,7 @@ class LoginUseCaseTest {
 
         assertEquals("token789", result.getToken());
         assertEquals("ROLE_ADV", result.getRole());
+        assertEquals("advogadoFisico", result.getTipoUsuario());
         assertEquals("Advogado Físico", result.getNome());
         assertEquals("foto3.png", result.getFoto());
         assertEquals(usuario.getId(), result.getId());
@@ -167,6 +170,7 @@ class LoginUseCaseTest {
 
         assertEquals("token101", result.getToken());
         assertEquals("ROLE_ADVJ", result.getRole());
+        assertEquals("advogadoJuridico", result.getTipoUsuario());
         assertEquals("Advogado Jurídico", result.getNome());
         assertEquals("foto4.png", result.getFoto());
         assertEquals(usuario.getId(), result.getId());
